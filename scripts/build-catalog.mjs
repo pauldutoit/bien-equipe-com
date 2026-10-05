@@ -251,7 +251,7 @@ fs.mkdirSync("public/data", { recursive: true });
 fs.writeFileSync("src/data/fridges.json", JSON.stringify(products, null, 1));
 fs.writeFileSync(
   "public/data/niche.json",
-  JSON.stringify(products.map((p) => [p.id, p.name, p.type, p.width, p.height, p.depth, p.totalVolume, p.energyClass, p.kwh, p.noise, p.scores.global, p.design === "BUILT_IN" ? 1 : 0, p.noFrost ? 1 : 0])),
+  JSON.stringify(products.map((p) => [p.id, p.name, p.type, p.width, p.height, p.depth, p.totalVolume, p.energyClass, p.kwh, p.noise, p.scores.global, p.design === "BUILT_IN" ? 1 : 0, p.noFrost ? 1 : 0, p.eprel])),
 );
 
 // ---------- 6. État du marché (tous les modèles EPREL en vente) ----------

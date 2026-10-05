@@ -5,6 +5,7 @@ import Energy from "../../components/Energy.astro";
 import ScoreBars from "../../components/ScoreBars.astro";
 import Silhouettes from "../../components/Silhouettes.astro";
 import Offers from "../../components/Offers.astro";
+import EnergyLabel from "../../components/EnergyLabel.astro";
 import site from "../../data/site.config.json";
 import { type Fridge, duels, duelSlug, fmt, euros, yearlyCost, dims, rivals, duelSet, CLIMATE } from "../../lib/catalog";
 
@@ -68,8 +69,13 @@ const indexable = avisIds.has(a.id) && avisIds.has(b.id);
           {f === win && gap >= 0.2 && <span class="pill yellow">Meilleure note</span>}
           <h2 style="margin-top:8px"><a href={`/avis/${f.id}/`}>{f.name}</a></h2>
           <p class="muted">{f.typeLabel} · {dims(f)} · {f.totalVolume} L</p>
-          <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px"><Energy cls={f.energyClass} /><span class="score"><b>{fmt(f.scores.global, 1)}</b><small>/10</small></span></div>
-          <ScoreBars f={f} compact />
+          <div class="duo-body">
+            <EnergyLabel eprel={f.eprel} name={f.name} width={110} />
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px"><Energy cls={f.energyClass} /><span class="score"><b>{fmt(f.scores.global, 1)}</b><small>/10</small></span></div>
+              <ScoreBars f={f} compact />
+            </div>
+          </div>
         </div>
       ))}
     </div>
@@ -136,4 +142,5 @@ const indexable = avisIds.has(a.id) && avisIds.has(b.id);
   .duo { margin-top: 10px; }
   .duo .win { border: 2px solid var(--yellow); }
   .duo h2 a { color: var(--ink); text-decoration: none; }
+  .duo-body { display: flex; gap: 16px; align-items: flex-start; }
 </style>

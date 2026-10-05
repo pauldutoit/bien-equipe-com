@@ -70,7 +70,7 @@ p { margin: 0 0 1em; }
 }
 
 /* Breadcrumb */
-.crumbs { font-size: 0.85rem; color: var(--sub); padding: 14px 0 0; }
+.crumbs { font-size: 0.85rem; color: var(--sub); padding-top: 14px; }
 .crumbs a { color: var(--sub); }
 .crumbs span[aria-hidden] { margin: 0 6px; }
 

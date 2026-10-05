@@ -17,7 +17,7 @@ import site from "../data/site.config.json";
 </script>
 <script>
   import { readSelection, toggleSelection } from "../lib/selection";
-  type Row = [string, string, string, number, number, number, number, string, number, number, number, number, number];
+  type Row = [string, string, string, number, number, number, number, string, number, number, number, number, number, string];
   const fr = (n: number, d = 0) => n.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
   const price = (window as any).__price as number;
   let all: Row[] = [];

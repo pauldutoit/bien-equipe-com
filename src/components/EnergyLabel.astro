@@ -1,0 +1,21 @@
+---
+// Étiquette énergie officielle d'un modèle (image EPREL), cliquable pour l'ouvrir en grand.
+import { hasLabel, labelUrl, LABEL_RATIO } from "../lib/labels";
+interface Props { eprel: string; name: string; width?: number; small?: boolean; link?: boolean; eager?: boolean }
+const { eprel, name, width = 160, small = false, link = true, eager = false } = Astro.props;
+const show = hasLabel(eprel);
+const img = { src: labelUrl(eprel, small), width, height: Math.round(width * LABEL_RATIO) };
+---
+{show && (
+  link ? (
+    <a class="elabel" href={labelUrl(eprel)} target="_blank" title={`Agrandir l'étiquette énergie du ${name}`}>
+      <img {...img} alt={`Étiquette énergie officielle du ${name}`} loading={eager ? "eager" : "lazy"} decoding="async" />
+    </a>
+  ) : (
+    <img class="elabel" {...img} alt={`Étiquette énergie du ${name}`} loading={eager ? "eager" : "lazy"} decoding="async" />
+  )
+)}
+<style>
+  .elabel { display: block; flex-shrink: 0; }
+  .elabel img, img.elabel { display: block; height: auto; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+</style>

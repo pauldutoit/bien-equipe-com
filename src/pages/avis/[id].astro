@@ -6,6 +6,7 @@ import ScoreBars from "../../components/ScoreBars.astro";
 import Offers from "../../components/Offers.astro";
 import ProductCard from "../../components/ProductCard.astro";
 import Silhouettes from "../../components/Silhouettes.astro";
+import EnergyLabel from "../../components/EnergyLabel.astro";
 import site from "../../data/site.config.json";
 import {
   type Fridge, fridges, FACETS, typeStats, TYPE_PLURAL, rivals, duelSlug, duelSet, brandSlug,
@@ -95,7 +96,11 @@ const ld = {
   <script type="application/ld+json" slot="head" set:html={JSON.stringify(ld)} />
   <div class="wrap fiche">
     <header class="fiche-head">
-      <div>
+      <div class="head-main">
+        <figure class="head-label">
+          <EnergyLabel eprel={f.eprel} name={f.name} width={150} eager />
+        </figure>
+        <div>
         <p class="eyebrow">{f.typeLabel} · {f.brand}</p>
         <h1>Avis {f.name}</h1>
         <p class="lead">
@@ -111,6 +116,7 @@ const ld = {
           {f.design === "BUILT_IN" && <span class="pill yellow">Encastrable</span>}
         </div>
         {f.variants.length > 0 && <p class="small muted" style="margin-top:10px">Existe aussi sous {f.variants.length > 1 ? "les références" : "la référence"} {f.variants.map((v) => v.ref).join(", ")} (même appareil, autre finition).</p>}
+        </div>
       </div>
       <aside class="card verdict">
         <div class="big-score"><b>{fmt(f.scores.global, 1)}</b><span>/10</span></div>
@@ -261,6 +267,13 @@ const ld = {
 <style>
   .fiche-head { display: grid; grid-template-columns: 1fr 340px; gap: 28px; align-items: start; padding-top: 18px; }
   .lead { font-size: 1.08rem; color: var(--sub); }
+  .head-main { display: flex; gap: 22px; align-items: flex-start; }
+  .head-label { margin: 6px 0 0; flex: 0 0 auto; }
+  @media (max-width: 600px) {
+    .head-main { flex-direction: column-reverse; }
+    .head-label { align-self: center; }
+    .head-label :global(img) { width: 120px; }
+  }
   .chips-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .big-score { font-family: var(--font-head); font-weight: 800; color: var(--night); }
   .big-score b { font-size: 3.2rem; line-height: 1; }

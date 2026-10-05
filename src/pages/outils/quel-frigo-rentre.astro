@@ -64,7 +64,7 @@ const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: f
 </BaseLayout>
 
 <script>
-  type Row = [string, string, string, number, number, number, number, string, number, number, number, number, number];
+  type Row = [string, string, string, number, number, number, number, string, number, number, number, number, number, string];
   const TYPE_LABELS: Record<string, string> = {
     combine: "Combiné", "deux-portes": "2 portes", "une-porte": "1 porte", americain: "Américain",
     multiportes: "Multiportes", "table-top": "Table top", encastrable: "Encastrable", "sous-plan": "Sous plan",
@@ -129,12 +129,13 @@ const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: f
     res.sort(sorters[st.s] || sorters.score);
     count.textContent = res.length ? `${res.length} réfrigérateur${res.length > 1 ? "s rentrent" : " rentre"} dans cet espace` : "Aucun modèle ne rentre : essayez sans filtre ou vérifiez vos mesures";
     list.innerHTML = res.slice(0, shown).map((r) => {
-      const [id, name, type, w, h, d, vol, cls, kwh, noise, score, , nf] = r;
+      const [id, name, type, w, h, d, vol, cls, kwh, noise, score, , nf, eprel] = r;
       const spare = st.mode === "libre" && st.w ? `<span class="pill green">${fr(st.w - w, 1)} cm de marge en largeur</span>` : "";
       return `<article class="pcard">
         <div class="row"><span class="pill">${TYPE_LABELS[type] || type}</span><span class="score"><b>${fr(score, 1)}</b><small>/10</small></span></div>
+        <div class="pc-head"><img class="elabel-s" src="/labels/${eprel}-s.webp" width="52" height="104" alt="Étiquette énergie du ${esc(name)}" loading="lazy" onerror="this.remove()"><div>
         <h3><a href="/avis/${id}/">${esc(name)}</a></h3>
-        <div class="dims">${fr(w, 1)} × ${fr(h, 1)} × ${fr(d, 1)} cm · ${vol} L</div>
+        <div class="dims">${fr(w, 1)} × ${fr(h, 1)} × ${fr(d, 1)} cm · ${vol} L</div></div></div>
         <div class="meta"><span class="energy energy-${cls}">${cls}</span><span class="pill">${kwh} kWh/an</span><span class="pill">${noise} dB</span>${nf ? '<span class="pill green">No Frost</span>' : ""}${spare}</div>
         <button class="btn ghost small sel" type="button" data-sel-toggle="${id}" aria-pressed="false">☆ Ajouter à ma sélection</button>
       </article>`;
@@ -172,4 +173,7 @@ const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: f
   .opts { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 16px; }
   .hint { margin: 12px 0 0; }
   #out { margin-top: 10px; }
+  #list :global(.pc-head) { display: flex; gap: 12px; align-items: center; }
+  #list :global(.pc-head h3) { margin-bottom: 4px; }
+  #list :global(.elabel-s) { flex-shrink: 0; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
 </style>

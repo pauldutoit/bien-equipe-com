@@ -1,5 +1,6 @@
 ---
 import Energy from "./Energy.astro";
+import EnergyLabel from "./EnergyLabel.astro";
 import { type Fridge, dims, fmt, euros, yearlyCost } from "../lib/catalog";
 interface Props { f: Fridge; rank?: number; note?: string }
 const { f, rank, note } = Astro.props;
@@ -10,8 +11,13 @@ const { f, rank, note } = Astro.props;
     <span class="pill">{f.typeLabel.replace("Réfrigérateur ", "")}</span>
     <span class="score" title="Note globale Bien Équipé"><b>{fmt(f.scores.global, 1)}</b><small>/10</small></span>
   </div>
-  <h3><a href={`/avis/${f.id}/`}>{f.name}</a></h3>
-  <div class="dims">{dims(f)} · {f.totalVolume} L</div>
+  <div class="pc-head">
+    <EnergyLabel eprel={f.eprel} name={f.name} width={52} small link={false} />
+    <div>
+      <h3><a href={`/avis/${f.id}/`}>{f.name}</a></h3>
+      <div class="dims">{dims(f)} · {f.totalVolume} L</div>
+    </div>
+  </div>
   <div class="meta">
     <Energy cls={f.energyClass} />
     <span class="pill">{f.kwh} kWh/an · {euros(yearlyCost(f))}/an</span>
@@ -21,3 +27,7 @@ const { f, rank, note } = Astro.props;
   {note && <p class="small muted" style="margin:0">{note}</p>}
   <button class="btn ghost small sel" type="button" data-sel-toggle={f.id} aria-pressed="false">☆ Ajouter à ma sélection</button>
 </article>
+<style>
+  .pc-head { display: flex; gap: 12px; align-items: center; }
+  .pc-head h3 { margin-bottom: 4px; }
+</style>
