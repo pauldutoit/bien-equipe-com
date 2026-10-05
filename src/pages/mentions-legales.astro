@@ -3,8 +3,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import site from "../data/site.config.json";
 const missing = !site.legalName || !site.legalAddress;
 if (missing) console.warn("[mentions-legales] legalName / legalAddress à compléter dans src/data/site.config.json");
-// Téléphone obligatoire pour un éditeur professionnel (LCEN art. 6-III) : affiché dès qu'il est renseigné.
-if (!site.legalPhone) console.warn("[mentions-legales] legalPhone vide : numéro de téléphone à renseigner");
+// Choix de l'éditeur (2026-10-05) : contact par e-mail, pas de téléphone (comme quel-canape.fr).
+// Le téléphone s'affiche si legalPhone est renseigné un jour.
 ---
 <BaseLayout title="Mentions légales" description="Mentions légales du site Bien Équipé." indexable={false} crumbs={[{ label: "Mentions légales" }]}>
   <div class="wrap prose" style="padding-top:18px">
@@ -16,7 +16,7 @@ if (!site.legalPhone) console.warn("[mentions-legales] legalPhone vide : numéro
       {site.registrationNumber && <>Immatriculation : {site.registrationNumber}<br /></>}
       Directeur de la publication : {site.publicationDirector || "[à compléter]"}<br />
       {site.legalPhone && <>Téléphone : {site.legalPhone}<br /></>}
-      Contact : <a href="/contact/">formulaire de contact</a>
+      Contact direct : par e-mail à <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>{!site.legalPhone && ". Nous ne proposons pas de contact téléphonique"}. Vous pouvez aussi utiliser le <a href="/contact/">formulaire de contact</a>.
     </p>
     <h2>Hébergement</h2>
     <p>{site.host}</p>

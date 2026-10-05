@@ -1,11 +1,13 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import site from "../data/site.config.json";
 const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "";
 ---
 <BaseLayout title="Contact" description="Une question, une erreur dans une fiche ? Écrivez à l'équipe Bien Équipé." crumbs={[{ label: "Contact" }]}>
   <div class="wrap prose" style="padding-top:18px">
     <h1>Nous écrire</h1>
     <p>Une erreur dans une fiche, un modèle manquant, une question sur un appareil ? Nous lisons tous les messages. Nous ne répondons pas aux demandes de placement de produit payé.</p>
+    <p>Par e-mail : <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>, ou via le formulaire ci-dessous.</p>
     <form id="contact" class="card" novalidate style="display:flex;flex-direction:column;gap:14px">
       <div class="field"><label for="name">Nom</label><input id="name" name="name" required maxlength="120" /></div>
       <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" required maxlength="200" /></div>
