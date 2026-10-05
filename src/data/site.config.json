@@ -18,5 +18,7 @@
   "electricity": {
     "price": 0.2001,
     "label": "Tarif Bleu EDF option Base 6 kVA, TTC, au 1er août 2026"
-  }
+  },
+  "matomoUrl": "//analytics.webfocus.fr/",
+  "matomoSiteId": "24"
 }
