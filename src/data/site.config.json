@@ -4,11 +4,11 @@
   "tagline": "L'électroménager choisi sur des données, pas sur des promesses",
   "locale": "fr-FR",
   "youtube": "",
-  "legalName": "",
-  "legalForm": "",
-  "legalAddress": "",
-  "registrationNumber": "",
-  "publicationDirector": "",
+  "legalName": "Paul Dutoit EI",
+  "legalForm": "entreprise individuelle, nom commercial ZQSD Web",
+  "legalAddress": "4 rue de l'Espierre, 59420 Mouvaux, France",
+  "registrationNumber": "SIREN 844 824 631",
+  "publicationDirector": "Paul Dutoit",
   "host": "Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, États-Unis",
   "dataUpdated": "2026-10-05",
   "electricity": {
@@ -16,5 +16,6 @@
     "label": "Tarif Bleu EDF option Base 6 kVA, TTC, au 1er août 2026"
   },
   "matomoUrl": "//analytics.webfocus.fr/",
-  "matomoSiteId": "24"
+  "matomoSiteId": "24",
+  "legalPhone": ""
 }
