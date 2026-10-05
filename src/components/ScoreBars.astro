@@ -1,0 +1,25 @@
+---
+import { type Fridge, fmt } from "../lib/catalog";
+const { f, compact = false } = Astro.props as { f: Fridge; compact?: boolean };
+const rows = [
+  { k: "energie", label: "Efficacité énergétique", w: "35 %" },
+  { k: "silence", label: "Silence", w: "20 %" },
+  { k: "volume", label: "Volume utile / encombrement", w: "20 %" },
+  { k: "equipements", label: "Équipements", w: "25 %" },
+] as const;
+---
+<div class="scorebars">
+  {rows.map((r) => (
+    <div class="sb-row">
+      <div class="sb-head">
+        <span>{r.label}{!compact && <span class="muted small"> · poids {r.w}</span>}</span>
+        <b>{fmt(f.scores[r.k], 1)}/10</b>
+      </div>
+      <div class="bar"><i style={`width:${f.scores[r.k] * 10}%`} /></div>
+    </div>
+  ))}
+</div>
+<style>
+  .scorebars { display: flex; flex-direction: column; gap: 12px; }
+  .sb-head { display: flex; justify-content: space-between; gap: 10px; font-size: 0.93rem; margin-bottom: 4px; }
+</style>

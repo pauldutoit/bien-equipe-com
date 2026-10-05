@@ -1,0 +1,139 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Energy from "../../components/Energy.astro";
+import ScoreBars from "../../components/ScoreBars.astro";
+import Silhouettes from "../../components/Silhouettes.astro";
+import Offers from "../../components/Offers.astro";
+import site from "../../data/site.config.json";
+import { type Fridge, duels, duelSlug, fmt, euros, yearlyCost, dims, rivals, duelSet, CLIMATE } from "../../lib/catalog";
+
+export function getStaticPaths() {
+  return duels().map(([a, b]) => ({ params: { duel: duelSlug(a, b) }, props: { a, b } }));
+}
+const { a, b } = Astro.props as { a: Fridge; b: Fridge };
+const [win, lose] = a.scores.global >= b.scores.global ? [a, b] : [b, a];
+const gap = Math.abs(a.scores.global - b.scores.global);
+const crit = [
+  { k: "energie", label: "Efficacité énergétique" },
+  { k: "silence", label: "Silence" },
+  { k: "volume", label: "Volume utile / encombrement" },
+  { k: "equipements", label: "Équipements" },
+] as const;
+const costGap10 = Math.abs(yearlyCost(a) - yearlyCost(b)) * 10;
+const cheaperRun = a.kwh <= b.kwh ? a : b;
+
+function reasons(x: Fridge, y: Fridge) {
+  const r: string[] = [];
+  if (x.kwh < y.kwh - 5) r.push(`vous voulez la facture la plus basse (${x.kwh} kWh/an contre ${y.kwh})`);
+  if (x.noise < y.noise) r.push(`le bruit vous gêne (${x.noise} dB contre ${y.noise})`);
+  if (x.totalVolume > y.totalVolume + 10) r.push(`il vous faut de la place (${x.totalVolume} L contre ${y.totalVolume})`);
+  if (x.freezerVolume > y.freezerVolume + 10) r.push(`vous congelez beaucoup (${x.freezerVolume} L de congélateur contre ${y.freezerVolume})`);
+  if (x.width < y.width - 1) r.push(`la largeur est comptée (${fmt(x.width, 1)} cm contre ${fmt(y.width, 1)})`);
+  if (x.height < y.height - 3) r.push(`la hauteur est limitée (${fmt(x.height, 1)} cm contre ${fmt(y.height, 1)})`);
+  if (x.noFrost && !y.noFrost) r.push("vous ne voulez plus jamais dégivrer (No Frost)");
+  if (x.chill && !y.chill) r.push("vous voulez une zone fraîcheur à 0 °C");
+  if (x.climate.includes("T") && !y.climate.includes("T")) r.push("il ira dans un garage ou une pièce chaude");
+  return r.length ? r : ["vous préférez sa marque ou son design : sur les données, l'écart est faible"];
+}
+const others = [...rivals(a, 3), ...rivals(b, 3)].filter((x) => x.id !== a.id && x.id !== b.id);
+const moreDuels = others.flatMap((x) => [duelSlug(a, x), duelSlug(b, x)]).filter((s) => duelSet.has(s));
+const otherDuels = [...new Set(moreDuels)].slice(0, 6);
+const rows: [string, (f: Fridge) => any][] = [
+  ["Type", (f) => f.typeLabel.replace("Réfrigérateur ", "")],
+  ["Dimensions (L × H × P)", (f) => dims(f)],
+  ["Volume total", (f) => `${f.totalVolume} L`],
+  ["Froid / congélation", (f) => `${f.fridgeVolume} L / ${f.freezerVolume} L`],
+  ["Consommation", (f) => `${f.kwh} kWh/an`],
+  ["Coût annuel", (f) => euros(yearlyCost(f))],
+  ["Bruit", (f) => `${f.noise} dB (${f.noiseClass})`],
+  ["No Frost", (f) => (f.noFrost ? "Oui" : "Non")],
+  ["Zone fraîcheur", (f) => (f.chill ? "Oui" : "Non")],
+  ["Congélation rapide", (f) => (f.fastFreeze ? "Oui" : "Non")],
+  ["Classe climatique", (f) => f.climate.join(", ")],
+  ["Garantie déclarée", (f) => (f.guarantee ? `${f.guarantee} mois` : "n. c.")],
+];
+const title = `${a.name} ou ${b.name} : lequel choisir ?`;
+const description = `Duel ${a.name} contre ${b.name} : dimensions, consommation, bruit, volume et notes comparés sur données officielles. Notre verdict selon votre usage.`;
+// Duel indexable seulement si les deux fiches ont un avis rédigé (gate anti contenu mince).
+const avisIds = new Set((await getCollection("avis")).filter((x) => x.data.indexable).map((x) => x.id));
+const indexable = avisIds.has(a.id) && avisIds.has(b.id);
+---
+<BaseLayout {title} {description} {indexable} crumbs={[{ label: "Duels", href: "/comparatif/" }, { label: `${a.ref} vs ${b.ref}` }]}>
+  <div class="wrap">
+    <h1 style="padding-top:18px">{a.name} ou {b.name} : lequel choisir ?</h1>
+    <div class="grid grid-2 duo">
+      {[a, b].map((f) => (
+        <div class={`card ${f === win && gap >= 0.2 ? "win" : ""}`}>
+          {f === win && gap >= 0.2 && <span class="pill yellow">Meilleure note</span>}
+          <h2 style="margin-top:8px"><a href={`/avis/${f.id}/`}>{f.name}</a></h2>
+          <p class="muted">{f.typeLabel} · {dims(f)} · {f.totalVolume} L</p>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px"><Energy cls={f.energyClass} /><span class="score"><b>{fmt(f.scores.global, 1)}</b><small>/10</small></span></div>
+          <ScoreBars f={f} compact />
+        </div>
+      ))}
+    </div>
+
+    <section>
+      <h2>Notre verdict</h2>
+      <p class="callout">
+        {gap < 0.2
+          ? `Match nul sur la note (${fmt(a.scores.global, 1)} contre ${fmt(b.scores.global, 1)}) : le choix se fait sur votre usage.`
+          : `Le ${win.name} l'emporte avec ${fmt(win.scores.global, 1)}/10 contre ${fmt(lose.scores.global, 1)}.`}
+        {" "}Sur 10 ans, le {cheaperRun.name} vous fera économiser environ {euros(costGap10)} d'électricité.
+      </p>
+      <div class="grid grid-2">
+        <div class="card"><h3>Prenez le {a.name} si…</h3><ul>{reasons(a, b).map((r) => <li>{r}</li>)}</ul></div>
+        <div class="card"><h3>Prenez le {b.name} si…</h3><ul>{reasons(b, a).map((r) => <li>{r}</li>)}</ul></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Critère par critère</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Critère</th><th class="num">{a.ref}</th><th class="num">{b.ref}</th></tr></thead>
+          <tbody>
+            {crit.map((c) => {
+              const va = a.scores[c.k], vb = b.scores[c.k];
+              return <tr><td>{c.label}</td><td class="num">{va > vb ? <b>{fmt(va, 1)}</b> : fmt(va, 1)}</td><td class="num">{vb > va ? <b>{fmt(vb, 1)}</b> : fmt(vb, 1)}</td></tr>;
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>À la même échelle : lequel prend le plus de place ?</h2>
+      <Silhouettes items={[a, b]} />
+    </section>
+
+    <section>
+      <h2>Fiche technique complète</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th></th><th>{a.name}</th><th>{b.name}</th></tr></thead>
+          <tbody>{rows.map(([l, fn]) => <tr><th>{l}</th><td>{fn(a)}</td><td>{fn(b)}</td></tr>)}</tbody>
+        </table>
+      </div>
+      <p class="small muted">Coût annuel au {site.electricity.label.replace("Tarif", "tarif")}. Classes climatiques : {Object.values(CLIMATE).join(" · ")}.</p>
+    </section>
+
+    <section class="grid grid-2">
+      <div class="card"><h3>Où acheter le {a.name}</h3><Offers f={a} /></div>
+      <div class="card"><h3>Où acheter le {b.name}</h3><Offers f={b} /></div>
+    </section>
+
+    {otherDuels.length > 0 && (
+      <section>
+        <h2>Autres duels utiles</h2>
+        <div class="chips">{otherDuels.map((s) => <a href={`/comparatif/${s}/`}>{s.replace("-vs-", " vs ").replace(/-/g, " ").toUpperCase()}</a>)}</div>
+      </section>
+    )}
+  </div>
+</BaseLayout>
+<style>
+  .duo { margin-top: 10px; }
+  .duo .win { border: 2px solid var(--yellow); }
+  .duo h2 a { color: var(--ink); text-decoration: none; }
+</style>

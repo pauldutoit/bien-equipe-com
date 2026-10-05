@@ -1,0 +1,21 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import site from "../data/site.config.json";
+---
+<BaseLayout title="Politique de confidentialité" description="Quelles données Bien Équipé collecte, pourquoi, et vos droits." crumbs={[{ label: "Confidentialité" }]}>
+  <div class="wrap prose" style="padding-top:18px">
+    <h1>Politique de confidentialité</h1>
+    <h2>Ce que nous collectons</h2>
+    <ul>
+      <li><strong>Formulaire de contact :</strong> nom, email et message, uniquement pour vous répondre. Conservés au plus 12 mois.</li>
+      <li><strong>Mesure d'audience :</strong> statistiques de visite anonymisées, sans cookie publicitaire ni revente.</li>
+      <li><strong>Ma sélection et calculateur :</strong> vos favoris et vos mesures restent dans votre navigateur (stockage local). Ils ne nous sont jamais transmis.</li>
+    </ul>
+    <h2>Ce que nous ne faisons pas</h2>
+    <p>Pas de publicité, pas de pixel de reciblage, pas de vente ni de partage de vos données à des fins commerciales.</p>
+    <h2>Sous-traitants</h2>
+    <p>Hébergement et protection anti-robot du formulaire : {site.host.split(",")[0]}. Envoi des messages du formulaire : un service d'email transactionnel.</p>
+    <h2>Vos droits</h2>
+    <p>Vous pouvez demander l'accès, la rectification ou l'effacement de vos données via le <a href="/contact/">formulaire de contact</a>, et saisir la CNIL (cnil.fr) en cas de désaccord.</p>
+  </div>
+</BaseLayout>

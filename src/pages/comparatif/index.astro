@@ -1,0 +1,18 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { duels, duelSlug, fridges, TYPES_ORDER } from "../../lib/catalog";
+const all = duels();
+const groups = TYPES_ORDER.map((t) => ({ t, label: fridges.find((f) => f.type === t)?.typeLabel || t, items: all.filter(([a]) => a.type === t) })).filter((g) => g.items.length);
+---
+<BaseLayout title="Duels de réfrigérateurs : lequel choisir entre deux modèles ?" description={`${all.length} duels entre réfrigérateurs concurrents : dimensions, consommation, bruit et volume comparés sur données officielles.`} crumbs={[{ label: "Duels" }]}>
+  <div class="wrap">
+    <h1 style="padding-top:18px">Duels de réfrigérateurs</h1>
+    <p class="muted" style="max-width:760px">Vous hésitez entre deux modèles ? Chaque duel oppose deux concurrents directs (même format, volume proche) et dit lequel prendre selon votre usage. {all.length} duels publiés.</p>
+    {groups.map((g) => (
+      <section>
+        <h2>{g.label}</h2>
+        <div class="chips">{g.items.map(([a, b]) => <a href={`/comparatif/${duelSlug(a, b)}/`}>{a.name} vs {b.name}</a>)}</div>
+      </section>
+    ))}
+  </div>
+</BaseLayout>

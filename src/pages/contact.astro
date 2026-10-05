@@ -1,0 +1,39 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "";
+---
+<BaseLayout title="Contact" description="Une question, une erreur dans une fiche ? Écrivez à l'équipe Bien Équipé." crumbs={[{ label: "Contact" }]}>
+  <div class="wrap prose" style="padding-top:18px">
+    <h1>Nous écrire</h1>
+    <p>Une erreur dans une fiche, un modèle manquant, une question sur un appareil ? Nous lisons tous les messages. Nous ne répondons pas aux demandes de placement de produit payé.</p>
+    <form id="contact" class="card" novalidate style="display:flex;flex-direction:column;gap:14px">
+      <div class="field"><label for="name">Nom</label><input id="name" name="name" required maxlength="120" /></div>
+      <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" required maxlength="200" /></div>
+      <div class="field"><label for="subject">Sujet</label>
+        <select id="subject" name="subject"><option>Erreur dans une fiche</option><option>Modèle manquant</option><option>Question sur un appareil</option><option>Autre</option></select>
+      </div>
+      <div class="field"><label for="message">Message</label><textarea id="message" name="message" rows="6" required minlength="10" maxlength="4000"></textarea></div>
+      <div style="position:absolute;left:-9999px" aria-hidden="true"><input name="company_hp" tabindex="-1" autocomplete="off" /></div>
+      {siteKey && <div class="cf-turnstile" data-sitekey={siteKey}></div>}
+      <button class="btn" type="submit">Envoyer</button>
+      <p id="status" class="small" role="status"></p>
+      <p class="small muted" style="margin:0">Vos données servent uniquement à vous répondre. <a href="/politique-confidentialite/">Politique de confidentialité</a>.</p>
+    </form>
+  </div>
+  {siteKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
+</BaseLayout>
+<script>
+  const form = document.getElementById("contact") as HTMLFormElement;
+  const status = document.getElementById("status")!;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    status.textContent = "Envoi…";
+    const data = Object.fromEntries(new FormData(form));
+    try {
+      const res = await fetch("/api/contact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) });
+      const out = await res.json().catch(() => ({}));
+      if (res.ok && out.ok) { status.textContent = "Merci, votre message est parti."; form.reset(); (window as any).turnstile?.reset?.(); }
+      else status.textContent = out.error === "validation" ? "Vérifiez les champs : nom, email valide et message d'au moins 10 caractères." : out.error === "captcha" ? "La vérification anti-robot a échoué, réessayez." : "L'envoi a échoué, réessayez plus tard.";
+    } catch { status.textContent = "L'envoi a échoué, réessayez plus tard."; }
+  });
+</script>

@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Page introuvable" description="Cette page n'existe pas ou plus." indexable={false}>
+  <div class="wrap prose" style="padding:40px 16px">
+    <h1>Cette page n'existe pas (ou plus)</h1>
+    <p>Le modèle a peut-être été retiré du marché. Essayez plutôt :</p>
+    <ul>
+      <li><a href="/refrigerateur/">le classement des réfrigérateurs</a></li>
+      <li><a href="/outils/quel-frigo-rentre/">le calculateur de niche</a></li>
+      <li><a href="/marques/">les marques</a></li>
+    </ul>
+  </div>
+</BaseLayout>

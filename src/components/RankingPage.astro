@@ -1,0 +1,138 @@
+---
+// Gabarit commun des pages classement (/refrigerateur/, facettes, marques).
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ProductCard from "./ProductCard.astro";
+import Energy from "./Energy.astro";
+import Silhouettes from "./Silhouettes.astro";
+import site from "../data/site.config.json";
+import { type Fridge, FACETS, fmt, euros, yearlyCost, median, dims, MIN_INDEX, YEAR } from "../lib/catalog";
+
+interface Props {
+  title: string; description: string; h1: string; intro: string;
+  items: Fridge[]; crumbs: { label: string; href?: string }[];
+  current?: string; showFacets?: boolean;
+}
+const { title, description, h1, intro, items, crumbs, current, showFacets = true } = Astro.props;
+const indexable = items.length >= MIN_INDEX;
+const top3 = items.slice(0, 3);
+const listed = items.slice(0, 30);
+const stats = {
+  count: items.length,
+  kwh: median(items.map((f) => f.kwh)),
+  noise: median(items.map((f) => f.noise)),
+  vol: median(items.map((f) => f.totalVolume)),
+  nf: Math.round((items.filter((f) => f.noFrost).length / Math.max(1, items.length)) * 100),
+  brands: new Set(items.map((f) => f.brand)).size,
+};
+const best = {
+  conso: [...items].sort((a, b) => a.kwh - b.kwh)[0],
+  silence: [...items].sort((a, b) => a.noise - b.noise || b.scores.global - a.scores.global)[0],
+  volume: [...items].sort((a, b) => b.totalVolume - a.totalVolume)[0],
+};
+const why = (f: Fridge, i: number) => {
+  if (i === 0) return `La meilleure note globale de la sélection (${fmt(f.scores.global, 1)}/10).`;
+  const parts = [];
+  if (f.kwh <= stats.kwh * 0.9) parts.push(`sobre (${f.kwh} kWh/an)`);
+  if (f.noise <= stats.noise - 2) parts.push(`silencieux (${f.noise} dB)`);
+  if (f.totalVolume >= stats.vol * 1.1) parts.push(`spacieux (${f.totalVolume} L)`);
+  if (f.noFrost) parts.push("No Frost");
+  return parts.length ? `Pour qui veut un modèle ${parts.join(", ")}.` : `Un compromis équilibré à ${fmt(f.scores.global, 1)}/10.`;
+};
+const itemListLd = {
+  "@context": "https://schema.org", "@type": "ItemList", name: h1,
+  itemListElement: listed.slice(0, 10).map((f, i) => ({ "@type": "ListItem", position: i + 1, url: new URL(`/avis/${f.id}/`, Astro.site).href, name: f.name })),
+};
+---
+<BaseLayout {title} {description} {indexable} {crumbs}>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(itemListLd)} />
+  <div class="wrap">
+    <header style="padding-top:18px">
+      <h1>{h1}</h1>
+      <p class="lead" style="max-width:780px;color:var(--sub);font-size:1.08rem">{intro}</p>
+    </header>
+
+    <section class="grid grid-4 kpis">
+      <div class="card"><span class="muted small">Modèles analysés</span><b>{stats.count}</b><span class="small">{stats.brands} marques</span></div>
+      <div class="card"><span class="muted small">Consommation médiane</span><b>{stats.kwh} kWh</b><span class="small">{euros(stats.kwh * site.electricity.price)} par an</span></div>
+      <div class="card"><span class="muted small">Bruit médian</span><b>{stats.noise} dB</b><span class="small">{stats.nf} % en No Frost</span></div>
+      <div class="card"><span class="muted small">Volume médian</span><b>{stats.vol} L</b><span class="small">données EPREL</span></div>
+    </section>
+
+    {top3.length >= 3 && (
+      <section>
+        <h2>Les 3 meilleurs, et pour qui ils sont faits</h2>
+        <div class="grid grid-3">{top3.map((f, i) => <ProductCard f={f} rank={i + 1} note={why(f, i)} />)}</div>
+        <h3 style="margin-top:26px">À la même échelle</h3>
+        <Silhouettes items={top3} />
+      </section>
+    )}
+
+    {items.length >= 4 && (
+      <section>
+        <h2>Les meilleurs par critère</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Critère</th><th>Modèle</th><th class="num">Valeur</th></tr></thead>
+            <tbody>
+              <tr><td>Le plus sobre</td><td><a href={`/avis/${best.conso.id}/`}>{best.conso.name}</a></td><td class="num">{best.conso.kwh} kWh/an · {euros(yearlyCost(best.conso))}/an</td></tr>
+              <tr><td>Le plus silencieux</td><td><a href={`/avis/${best.silence.id}/`}>{best.silence.name}</a></td><td class="num">{best.silence.noise} dB</td></tr>
+              <tr><td>Le plus grand</td><td><a href={`/avis/${best.volume.id}/`}>{best.volume.name}</a></td><td class="num">{best.volume.totalVolume} L</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    )}
+
+    <section>
+      <h2>Notre classement complet</h2>
+      <p class="muted small">Classés par note globale Bien Équipé ({items.length > 30 ? `30 premiers sur ${items.length}` : `${items.length} modèles`}). <a href="/methodologie/">Comment nous notons</a>.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Modèle</th><th>Dimensions</th><th class="num">Volume</th><th>Classe</th><th class="num">kWh/an</th><th class="num">dB</th><th class="num">Note</th></tr></thead>
+          <tbody>
+            {listed.map((f, i) => (
+              <tr>
+                <td>{i + 1}</td>
+                <td><a href={`/avis/${f.id}/`}>{f.name}</a><br /><span class="small muted">{f.typeLabel.replace("Réfrigérateur ", "")}{f.noFrost ? " · No Frost" : ""}</span></td>
+                <td class="small">{dims(f)}</td>
+                <td class="num">{f.totalVolume} L</td>
+                <td><Energy cls={f.energyClass} /></td>
+                <td class="num">{f.kwh}</td>
+                <td class="num">{f.noise}</td>
+                <td class="num"><b>{fmt(f.scores.global, 1)}</b></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:28px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
+      <div><h3 style="margin:0">Vous avez une niche à respecter ?</h3><p class="muted" style="margin:0">Entrez vos mesures, on vous montre les modèles qui rentrent.</p></div>
+      <a class="btn" href="/outils/quel-frigo-rentre/">Ouvrir le calculateur de niche</a>
+    </section>
+
+    <slot />
+
+    {showFacets && (
+      <section>
+        <h2>Affiner la recherche</h2>
+        {(["Type", "Largeur", "Critère"] as const).map((g) => (
+          <>
+            <h3>Par {g.toLowerCase()}</h3>
+            <div class="chips" style="margin-bottom:14px">
+              {FACETS.filter((fc) => fc.group === g && fc.slug !== current).map((fc) => <a href={`/refrigerateur/${fc.slug}/`}>{fc.short}</a>)}
+            </div>
+          </>
+        ))}
+        <p><a href="/marques/">Voir toutes les marques →</a></p>
+      </section>
+    )}
+    <p class="small muted" style="margin-top:30px">Mis à jour le {new Date(site.dataUpdated).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} à partir de la base EPREL ({YEAR}). Seuls les modèles retrouvés chez un marchand français figurent ici.</p>
+  </div>
+</BaseLayout>
+<style>
+  .kpis { margin: 18px 0 8px; }
+  .kpis .card { display: flex; flex-direction: column; gap: 2px; padding: 16px 18px; }
+  .kpis b { font-family: var(--font-head); font-size: 1.5rem; color: var(--night); }
+</style>

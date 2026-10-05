@@ -1,0 +1,40 @@
+---
+import type { Fridge } from "../lib/catalog";
+const { f } = Astro.props as { f: Fridge };
+const q = encodeURIComponent(f.ref);
+// Liens directs (pas d'affiliation pour l'instant) : fiches marchands retrouvées, site officiel, puis recherches.
+const shops = f.offers.filter((o) => !o.official);
+const official = f.offers.filter((o) => o.official).slice(0, 1);
+const found = new Set(shops.map((o) => o.merchant));
+const searches = [
+  { key: "darty", name: "Darty", url: `https://www.darty.com/nav/recherche?text=${q}` },
+  { key: "boulanger", name: "Boulanger", url: `https://www.boulanger.com/resultats?tr=${q}` },
+  { key: "amazon", name: "Amazon", url: `https://www.amazon.fr/s?k=${encodeURIComponent(f.brand + " " + f.ref)}` },
+].filter((s) => !found.has(s.key));
+---
+<div class="offers">
+  {shops.map((o) => (
+    <a class="offer" href={o.url} rel="nofollow noopener" target="_blank">
+      <span><b>{o.merchantName}</b><br /><span class="small muted">Fiche produit{o.ref ? ` (${o.ref})` : ""}</span></span>
+      <span class="btn small">Voir le prix</span>
+    </a>
+  ))}
+  {official.map((o) => (
+    <a class="offer" href={o.url} rel="nofollow noopener" target="_blank">
+      <span><b>{o.merchantName}</b><br /><span class="small muted">Site officiel de la marque</span></span>
+      <span class="btn ghost small">Voir</span>
+    </a>
+  ))}
+  {searches.map((s) => (
+    <a class="offer" href={s.url} rel="nofollow noopener" target="_blank">
+      <span><b>{s.name}</b><br /><span class="small muted">Rechercher la référence</span></span>
+      <span class="btn ghost small">Chercher</span>
+    </a>
+  ))}
+  <p class="small muted" style="margin:6px 0 0">Liens directs vers les marchands, sans commission. Les prix changent souvent : vérifiez la référence exacte ({f.ref}) avant d'acheter.</p>
+</div>
+<style>
+  .offers { display: flex; flex-direction: column; gap: 8px; }
+  .offer { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; text-decoration: none; color: var(--ink); background: #fff; }
+  .offer:hover { border-color: var(--blue); }
+</style>

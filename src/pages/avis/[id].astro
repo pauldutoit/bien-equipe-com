@@ -1,0 +1,281 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Energy from "../../components/Energy.astro";
+import ScoreBars from "../../components/ScoreBars.astro";
+import Offers from "../../components/Offers.astro";
+import ProductCard from "../../components/ProductCard.astro";
+import Silhouettes from "../../components/Silhouettes.astro";
+import site from "../../data/site.config.json";
+import {
+  type Fridge, fridges, FACETS, typeStats, TYPE_PLURAL, rivals, duelSlug, duelSet, brandSlug,
+  fmt, euros, yearlyCost, dims, scoreLabel, pct, CLIMATE, COMPARTMENT, YEAR, frDate,
+} from "../../lib/catalog";
+
+export async function getStaticPaths() {
+  return fridges.map((f) => ({ params: { id: f.id }, props: { f } }));
+}
+const { f } = Astro.props as { f: Fridge };
+const avisAll = await getCollection("avis");
+const avis = avisAll.find((a) => a.id === f.id);
+const Avis = avis ? (await render(avis)).Content : null;
+const indexable = !!avis && avis.data.indexable;
+
+const st = typeStats[f.type];
+const plural = TYPE_PLURAL[f.type];
+const rank = st.rank(f);
+const kwhDiff = pct(f.kwh, st.kwh);
+const volDiff = pct(f.totalVolume, st.volume);
+const noiseDiff = f.noise - st.noise;
+const cost = yearlyCost(f);
+const costMedian = st.kwh * site.electricity.price;
+const riv = rivals(f, 4);
+const silItems = [f, ...riv.slice(0, 2)];
+const memberOf = FACETS.filter((fc) => fc.filter(f));
+
+// Points forts / faibles calculés (aucune invention : chaque phrase vient d'une donnée officielle).
+const forts: string[] = [];
+const faibles: string[] = [];
+if (kwhDiff <= -10) forts.push(`Consomme ${-kwhDiff} % de moins que la médiane des ${plural} (${f.kwh} kWh/an contre ${st.kwh}).`);
+if (kwhDiff >= 10) faibles.push(`Consomme ${kwhDiff} % de plus que la médiane des ${plural} (${f.kwh} kWh/an contre ${st.kwh}).`);
+if (noiseDiff <= -3) forts.push(`Plus silencieux que la moyenne : ${f.noise} dB contre ${st.noise} dB pour un ${plural.replace(/s$/, "").replace(/s /, " ")} médian.`);
+if (noiseDiff >= 3) faibles.push(`Plus bruyant que la moyenne : ${f.noise} dB contre ${st.noise} dB en médiane.`);
+if (f.scores.ratio >= st.ratio * 1.06) forts.push(`Bon rendement de volume : ${fmt(f.scores.ratio * 100)} % de l'encombrement extérieur est utilisable.`);
+if (f.scores.ratio <= st.ratio * 0.92) faibles.push(`Parois épaisses : seulement ${fmt(f.scores.ratio * 100)} % de l'encombrement extérieur est utilisable.`);
+if (f.noFrost) forts.push("Congélateur No Frost : pas de givre, pas de dégivrage manuel.");
+else if (f.freezerVolume > 0) faibles.push("Congélateur à froid statique : il faudra le dégivrer à la main.");
+if (f.chill) forts.push("Zone fraîcheur autour de 0 °C pour la viande et le poisson.");
+if (f.climate.includes("T")) forts.push("Classe climatique T : fonctionne jusqu'à 43 °C ambiant (garage, véranda).");
+else if (!f.climate.includes("ST")) faibles.push(`Plage de fonctionnement limitée (${f.minTemp} à ${f.maxTemp} °C) : à éviter dans une pièce non chauffée ou très chaude.`);
+if ((f.guarantee || 0) > 24) forts.push(`Garantie fabricant déclarée de ${f.guarantee / 12} ans.`);
+if (["A", "B"].includes(f.energyClass)) forts.push(`Classe énergétique ${f.energyClass}, rare sur ce format.`);
+if (["F", "G"].includes(f.energyClass)) faibles.push(`Classe énergétique ${f.energyClass}, parmi les moins efficaces du marché.`);
+
+const pourQui: string[] = [];
+const pasPourQui: string[] = [];
+if (f.totalVolume >= 400) pourQui.push("Une famille de 4 personnes et plus"); else if (f.totalVolume >= 280) pourQui.push("Un foyer de 2 à 4 personnes"); else pourQui.push("Une personne seule ou un couple");
+if (f.noise <= 35) pourQui.push("Une cuisine ouverte sur le salon, un studio");
+if (f.noise >= 40) pasPourQui.push("Un studio ou une cuisine ouverte : il s'entendra");
+if (f.climate.includes("T")) pourQui.push("Un garage, un cellier ou une véranda");
+if (f.width >= 83) pasPourQui.push("Un logement aux portes étroites : vérifiez le passage (la profondeur hors portes compte)");
+if (f.freezerVolume < 40) pasPourQui.push("Ceux qui congèlent beaucoup : le congélateur est petit, voire absent");
+if (f.freezerVolume >= 100) pourQui.push("Ceux qui congèlent beaucoup (batch cooking, grosses courses)");
+if (!f.noFrost && f.freezerVolume > 0) pasPourQui.push("Ceux qui ne veulent jamais dégivrer");
+
+const eprelUrl = `https://eprel.ec.europa.eu/screen/product/refrigeratingappliances2019/${f.eprel}`;
+const title = `Avis ${f.name} : ${f.typeLabel.toLowerCase()} ${f.totalVolume} L, note ${fmt(f.scores.global, 1)}/10`;
+const description = `${f.name} : ${dims(f)}, ${f.totalVolume} L, classe ${f.energyClass}, ${f.kwh} kWh/an (${euros(cost)}/an), ${f.noise} dB. Notre analyse sur données officielles et les modèles concurrents.`;
+const faq = [
+  { q: `Quelles sont les dimensions du ${f.name} ?`, a: `${fmt(f.width, 1)} cm de large, ${fmt(f.height, 1)} cm de haut et ${fmt(f.depth, 1)} cm de profondeur (données déclarées par le fabricant dans la base EPREL). ${f.design === "BUILT_IN" ? "C'est un modèle encastrable : ce sont les dimensions de l'appareil, la niche doit être un peu plus grande (voir la notice de montage)." : "Prévoyez quelques centimètres de jeu sur les côtés et au-dessus, et l'écart arrière indiqué par la notice pour la ventilation."}` },
+  { q: `Combien consomme le ${f.name} par an ?`, a: `${f.kwh} kWh par an selon l'étiquette énergie, soit environ ${euros(cost)} par an au ${site.electricity.label.replace("Tarif", "tarif")} (${fmt(site.electricity.price, 4)} €/kWh). La médiane des ${plural} de notre catalogue est de ${st.kwh} kWh/an.` },
+  { q: `Le ${f.name} est-il No Frost ?`, a: f.noFrost ? "Oui. Son compartiment congélation est à dégivrage automatique (froid ventilé) selon la fiche officielle." : f.freezerVolume > 0 ? "Non. Le compartiment congélation est déclaré à dégivrage manuel : il faudra le dégivrer de temps en temps." : "Il n'a pas de vrai compartiment congélateur." },
+  { q: `Est-il bruyant ?`, a: `Il déclare ${f.noise} dB(A), classe de bruit ${f.noiseClass}. ${f.noise <= 35 ? "C'est discret : on ne l'entend presque pas dans une pièce de vie." : f.noise <= 39 ? "C'est dans la moyenne : audible la nuit dans une pièce ouverte." : "C'est plutôt bruyant pour un réfrigérateur récent."}` },
+  { q: `Peut-on l'installer dans un garage ?`, a: `Sa classe climatique est ${f.climate.join(", ")} : il est prévu pour une température ambiante de ${f.minTemp} à ${f.maxTemp} °C. ${f.climate.includes("T") ? "Il supporte donc un garage chaud en été." : "Dans un garage qui dépasse cette plage, il risque de mal refroidir ou de s'user plus vite."}` },
+];
+const ld = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Product", name: f.name, brand: { "@type": "Brand", name: f.brand }, mpn: f.ref,
+      category: f.typeLabel,
+      description,
+      additionalProperty: [
+        { "@type": "PropertyValue", name: "Classe énergétique", value: f.energyClass },
+        { "@type": "PropertyValue", name: "Consommation annuelle", value: f.kwh, unitText: "kWh/an" },
+        { "@type": "PropertyValue", name: "Volume total", value: f.totalVolume, unitText: "L" },
+        { "@type": "PropertyValue", name: "Niveau sonore", value: f.noise, unitText: "dB" },
+      ],
+      ...(avis ? { review: { "@type": "Review", author: { "@type": "Organization", name: site.siteName }, reviewRating: { "@type": "Rating", ratingValue: f.scores.global, bestRating: 10, worstRating: 0 }, reviewBody: avis.data.verdict } } : {}),
+    },
+    { "@type": "FAQPage", mainEntity: faq.map((x) => ({ "@type": "Question", name: x.q, acceptedAnswer: { "@type": "Answer", text: x.a } })) },
+  ],
+};
+---
+<BaseLayout {title} {description} {indexable} crumbs={[{ label: "Réfrigérateurs", href: "/refrigerateur/" }, { label: f.typeLabel.replace("Réfrigérateur ", "").replace(/^./, (c) => c.toUpperCase()), href: `/refrigerateur/${f.type}/` }, { label: f.name }]}>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(ld)} />
+  <div class="wrap fiche">
+    <header class="fiche-head">
+      <div>
+        <p class="eyebrow">{f.typeLabel} · {f.brand}</p>
+        <h1>Avis {f.name}</h1>
+        <p class="lead">
+          {f.typeLabel} de {f.totalVolume} litres ({f.fridgeVolume} L de froid{f.freezerVolume ? `, ${f.freezerVolume} L de congélation` : ""}),
+          classé <strong>{rank}<sup>e</sup> sur {st.count}</strong> {plural} de notre catalogue.
+        </p>
+        <div class="chips-row">
+          <Energy cls={f.energyClass} />
+          <span class="pill">{dims(f)}</span>
+          <span class="pill">{f.kwh} kWh/an</span>
+          <span class="pill">{f.noise} dB</span>
+          {f.noFrost && <span class="pill green">No Frost</span>}
+          {f.design === "BUILT_IN" && <span class="pill yellow">Encastrable</span>}
+        </div>
+        {f.variants.length > 0 && <p class="small muted" style="margin-top:10px">Existe aussi sous {f.variants.length > 1 ? "les références" : "la référence"} {f.variants.map((v) => v.ref).join(", ")} (même appareil, autre finition).</p>}
+      </div>
+      <aside class="card verdict">
+        <div class="big-score"><b>{fmt(f.scores.global, 1)}</b><span>/10</span></div>
+        <p class="muted" style="margin:0 0 14px">{scoreLabel(f.scores.global)} · médiane des {plural} : {fmt(st.global, 1)}</p>
+        <ScoreBars f={f} compact />
+        <button class="btn ghost small" style="margin-top:16px;width:100%" type="button" data-sel-toggle={f.id} aria-pressed="false">☆ Ajouter à ma sélection</button>
+      </aside>
+    </header>
+
+    <div class="fiche-body">
+      <div class="col-main">
+        {avis && Avis && (
+          <section>
+            <h2>Notre avis sur le {f.name}</h2>
+            <p class="callout"><strong>Verdict :</strong> {avis.data.verdict}</p>
+            <div class="prose"><Avis /></div>
+          </section>
+        )}
+
+        <section>
+          <h2>L'essentiel en 30 secondes</h2>
+          <div class="grid grid-2">
+            <div class="card">
+              <h3>Points forts</h3>
+              <ul class="ticks">{(avis?.data.pour.length ? avis.data.pour : forts).map((t) => <li>{t}</li>)}{!forts.length && !avis && <li class="muted">Aucun point fort marqué face aux autres {plural}.</li>}</ul>
+            </div>
+            <div class="card">
+              <h3>Points faibles</h3>
+              <ul class="crosses">{(avis?.data.contre.length ? avis.data.contre : faibles).map((t) => <li>{t}</li>)}{!faibles.length && !avis && <li class="muted">Aucun point faible marqué face aux autres {plural}.</li>}</ul>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Va-t-il rentrer chez vous ?</h2>
+          <p>
+            Le {f.name} mesure <strong>{dims(f)}</strong> (largeur × hauteur × profondeur).
+            {f.design === "BUILT_IN"
+              ? " C'est un appareil encastrable : comparez ces cotes à la notice de montage, qui donne les dimensions de niche exactes."
+              : ` Pour un modèle en pose libre, comptez une niche d'au moins ${fmt(f.width + 2)} cm de large et ${fmt(f.height + 2)} cm de haut, et laissez de l'air derrière pour que le condenseur évacue la chaleur.`}
+          </p>
+          <Silhouettes items={silItems} />
+          <p class="small muted">Silhouettes de face à la même échelle, avec deux concurrents directs et une personne de 1,70 m. <a href="/outils/quel-frigo-rentre/">Vérifier avec vos propres mesures →</a></p>
+        </section>
+
+        <section>
+          <h2>Consommation : combien il coûte à faire tourner</h2>
+          <div class="grid grid-3">
+            <div class="card stat"><span class="muted small">Par an</span><b>{euros(cost)}</b><span class="small">{f.kwh} kWh</span></div>
+            <div class="card stat"><span class="muted small">Sur 10 ans</span><b>{euros(cost * 10)}</b><span class="small">au tarif actuel</span></div>
+            <div class="card stat"><span class="muted small">Écart avec la médiane</span><b>{cost - costMedian > 0 ? "+" : ""}{euros((cost - costMedian) * 10)}</b><span class="small">sur 10 ans</span></div>
+          </div>
+          <p class="small muted">Calcul : consommation de l'étiquette énergie × {fmt(site.electricity.price, 4)} €/kWh ({site.electricity.label}). La consommation réelle dépend de la pièce, du réglage et des ouvertures de porte.</p>
+        </section>
+
+        <section>
+          <h2>Volumes et compartiments</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Compartiment</th><th class="num">Volume</th><th class="num">Température</th><th>Dégivrage</th></tr></thead>
+              <tbody>
+                {f.compartments.map((c) => (
+                  <tr><td>{COMPARTMENT[c.type] || c.type}</td><td class="num">{c.volume != null ? `${fmt(c.volume, c.volume % 1 ? 1 : 0)} L` : "n. c."}</td><td class="num">{c.temp != null ? `${c.temp} °C` : "n. c."}</td><td>{c.defrost === "A" ? "Automatique" : "Manuel"}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p class="small muted">Volume total {f.totalVolume} L, soit {volDiff >= 0 ? "+" : ""}{volDiff} % par rapport à la médiane des {plural} ({st.volume} L).</p>
+        </section>
+
+        <section>
+          <h2>Pour qui, pas pour qui</h2>
+          <div class="grid grid-2">
+            <div class="card"><h3>Il vous convient si vous êtes…</h3><ul class="ticks">{pourQui.map((t) => <li>{t}</li>)}</ul></div>
+            <div class="card"><h3>Passez votre chemin si vous êtes…</h3><ul class="crosses">{pasPourQui.length ? pasPourQui.map((t) => <li>{t}</li>) : <li class="muted">Pas de contre-indication nette.</li>}</ul></div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Comment nous l'avons noté</h2>
+          <ScoreBars f={f} />
+          <p class="small muted" style="margin-top:12px">Les quatre notes sont calculées à partir des données déclarées par le fabricant dans la base officielle EPREL, avec la même règle pour tous les modèles. <a href="/methodologie/">Voir la méthodologie</a>.</p>
+        </section>
+
+        <section>
+          <h2>Fiche technique complète</h2>
+          <div class="table-wrap">
+            <table>
+              <tbody>
+                <tr><th>Marque</th><td><a href={`/marques/${brandSlug(f.brand)}/`}>{f.brand}</a></td></tr>
+                <tr><th>Référence</th><td>{f.ref} <span class="muted small">(identifiant EPREL : {f.modelIdentifier})</span></td></tr>
+                <tr><th>Type</th><td>{f.typeLabel} · {f.design === "BUILT_IN" ? "encastrable" : "pose libre"}</td></tr>
+                <tr><th>Dimensions (L × H × P)</th><td>{dims(f)}</td></tr>
+                <tr><th>Volume total</th><td>{f.totalVolume} L</td></tr>
+                <tr><th>Réfrigérateur / congélateur</th><td>{f.fridgeVolume} L / {f.freezerVolume} L</td></tr>
+                <tr><th>Classe énergétique</th><td><Energy cls={f.energyClass} /> (indice d'efficacité {f.eei})</td></tr>
+                <tr><th>Consommation</th><td>{f.kwh} kWh/an</td></tr>
+                <tr><th>Bruit</th><td>{f.noise} dB(A), classe {f.noiseClass}</td></tr>
+                <tr><th>No Frost (congélateur)</th><td>{f.noFrost ? "Oui" : f.freezerVolume ? "Non" : "Sans objet"}</td></tr>
+                <tr><th>Congélation rapide</th><td>{f.fastFreeze ? "Oui" : "Non"}</td></tr>
+                <tr><th>Classe climatique</th><td>{f.climate.map((c) => CLIMATE[c]).join(", ")}</td></tr>
+                <tr><th>Garantie fabricant</th><td>{f.guarantee ? `${f.guarantee} mois` : "Non précisée"}</td></tr>
+                <tr><th>Mise sur le marché</th><td>{frDate(f.onMarket)}</td></tr>
+                {f.variants.length > 0 && <tr><th>Variantes identiques</th><td>{f.variants.map((v) => v.ref).join(", ")} <span class="muted small">(mêmes dimensions et mêmes performances : couleur ou finition différente)</span></td></tr>}
+                <tr><th>Source</th><td><a href={eprelUrl} rel="nofollow noopener" target="_blank">Fiche EPREL n° {f.eprel}</a>{f.manufacturerUrl && <> · <a href={f.manufacturerUrl} rel="nofollow noopener" target="_blank">fiche fabricant</a></>}</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section>
+          <h2>Ses concurrents directs</h2>
+          <p class="muted">Même type, volume et encombrement proches.</p>
+          <div class="grid grid-2">{riv.map((r) => <ProductCard f={r} />)}</div>
+          {riv.some((r) => duelSet.has(duelSlug(f, r))) && (
+            <>
+              <h3 style="margin-top:22px">Encore une hésitation ? Comparez-le en duel</h3>
+              <div class="chips">
+                {riv.filter((r) => duelSet.has(duelSlug(f, r))).map((r) => <a href={`/comparatif/${duelSlug(f, r)}/`}>{f.name} ou {r.name} ?</a>)}
+              </div>
+            </>
+          )}
+        </section>
+
+        {memberOf.length > 0 && (
+          <section>
+            <h2>Ce réfrigérateur figure dans</h2>
+            <div class="chips">{memberOf.map((fc) => <a href={`/refrigerateur/${fc.slug}/`}>{fc.h1.replace(` ${YEAR}`, "")}</a>)}</div>
+          </section>
+        )}
+
+        <section>
+          <h2>Questions fréquentes</h2>
+          {faq.map((x) => <details class="faq"><summary>{x.q}</summary><p>{x.a}</p></details>)}
+        </section>
+      </div>
+
+      <aside class="col-side">
+        <div class="card sticky">
+          <h3>Où l'acheter</h3>
+          <Offers f={f} />
+        </div>
+      </aside>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .fiche-head { display: grid; grid-template-columns: 1fr 340px; gap: 28px; align-items: start; padding-top: 18px; }
+  .lead { font-size: 1.08rem; color: var(--sub); }
+  .chips-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .big-score { font-family: var(--font-head); font-weight: 800; color: var(--night); }
+  .big-score b { font-size: 3.2rem; line-height: 1; }
+  .big-score span { font-size: 1.3rem; color: var(--sub); }
+  .fiche-body { display: grid; grid-template-columns: 1fr 320px; gap: 32px; margin-top: 10px; }
+  .col-main { min-width: 0; }
+  .sticky { position: sticky; top: 84px; }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat b { font-family: var(--font-head); font-size: 1.6rem; color: var(--night); }
+  ul.ticks, ul.crosses { list-style: none; padding: 0; margin: 0; }
+  ul.ticks li, ul.crosses li { padding-left: 26px; position: relative; margin-bottom: 8px; }
+  ul.ticks li::before { content: "✓"; position: absolute; left: 0; color: var(--good); font-weight: 800; }
+  ul.crosses li::before { content: "✕"; position: absolute; left: 0; color: var(--bad); font-weight: 800; }
+  @media (max-width: 960px) {
+    .fiche-head, .fiche-body { grid-template-columns: 1fr; }
+    .sticky { position: static; }
+  }
+</style>

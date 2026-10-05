@@ -1,0 +1,75 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import site from "../data/site.config.json";
+import market from "../data/market.json";
+import { fmt, TYPES_ORDER, fridges, brandSlug } from "../lib/catalog";
+const classes = ["A", "B", "C", "D", "E", "F", "G"] as const;
+const totalCls = Object.values(market.classShare).reduce((a, b) => a + (b as number), 0);
+const share = (c: string) => Math.round((((market.classShare as any)[c] as number) / totalCls) * 1000) / 10;
+const types = TYPES_ORDER.map((t) => ({ t, label: fridges.find((f) => f.type === t)?.typeLabel || t, ...(market.byType as any)[t] })).filter((x) => x.count);
+const brandsTop = market.byBrand.filter((b) => b.count >= 5);
+const updated = new Date(market.updated).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+const eShare = share("E");
+const abShare = Math.round((share("A") + share("B")) * 10) / 10;
+---
+<BaseLayout title="État du marché des réfrigérateurs : les chiffres officiels" description={`Classes énergétiques, consommation, bruit : ce que disent les ${fmt(market.liveFridges)} fiches officielles des réfrigérateurs en vente en Europe. Mis à jour le ${updated}.`} crumbs={[{ label: "État du marché" }]}>
+  <div class="wrap" style="padding-top:18px">
+    <p class="eyebrow">Observatoire · mis à jour le {updated}</p>
+    <h1>État du marché des réfrigérateurs</h1>
+    <p class="muted" style="max-width:780px">Chaque réfrigérateur vendu dans l'Union européenne doit être déclaré dans la base EPREL avec ses mesures officielles. Nous l'analysons en entier : {fmt(market.liveFridges)} réfrigérateurs actuellement en vente, dont {fmt(market.catalog)} retrouvés chez des marchands français.</p>
+
+    <section class="grid grid-4 kpis">
+      <div class="card"><span class="muted small">En classe E</span><b>{fmt(eShare, 1)} %</b><span class="small">la classe la plus courante</span></div>
+      <div class="card"><span class="muted small">En classe A ou B</span><b>{fmt(abShare, 1)} %</b><span class="small">encore rares</span></div>
+      <div class="card"><span class="muted small">Bruit médian</span><b>{market.medianNoise} dB</b><span class="small">tous formats</span></div>
+      <div class="card"><span class="muted small">No Frost</span><b>{market.noFrostShare} %</b><span class="small">des modèles</span></div>
+    </section>
+
+    <section>
+      <h2>Répartition par classe énergétique</h2>
+      <div class="card">
+        {classes.map((c) => (
+          <div class="clsrow">
+            <span class={`energy energy-${c}`}>{c}</span>
+            <div class="bar" style="flex:1;height:14px"><i style={`width:${Math.max(0.5, share(c))}%;background:var(--night-2)`} /></div>
+            <span class="num">{fmt(share(c), 1)} %</span>
+            <span class="num muted small">{(market.medianKwhByClass as any)[c] ?? "–"} kWh/an</span>
+          </div>
+        ))}
+        <p class="small muted" style="margin:12px 0 0">Part des réfrigérateurs en vente (EPREL) et consommation médiane par classe. Coût d'un kWh : {fmt(site.electricity.price, 4)} € ({site.electricity.label}).</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Par type de réfrigérateur (catalogue France)</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Type</th><th class="num">Modèles</th><th class="num">Volume médian</th><th class="num">kWh/an médian</th><th class="num">dB médian</th><th class="num">L × H × P médians</th></tr></thead>
+          <tbody>{types.map((x) => <tr><td><a href={`/refrigerateur/${x.t}/`}>{x.label}</a></td><td class="num">{x.count}</td><td class="num">{x.medianVolume} L</td><td class="num">{x.medianKwh}</td><td class="num">{x.medianNoise}</td><td class="num small">{fmt(x.medianWidth, 1)} × {fmt(x.medianHeight, 1)} × {fmt(x.medianDepth, 1)} cm</td></tr>)}</tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Par marque (5 modèles et plus)</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Marque</th><th class="num">Modèles</th><th class="num">Note médiane</th><th class="num">kWh/an médian</th><th class="num">dB médian</th></tr></thead>
+          <tbody>{brandsTop.map((b) => <tr><td><a href={`/marques/${brandSlug(b.brand)}/`}>{b.brand}</a></td><td class="num">{b.count}</td><td class="num">{fmt(b.medianScore, 1)}</td><td class="num">{b.medianKwh}</td><td class="num">{b.medianNoise}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="prose">
+      <h2>D'où viennent ces chiffres</h2>
+      <p>Les données viennent de la base EPREL (European Product Registry for Energy Labelling) de la Commission européenne. Les fabricants y déclarent les valeurs mesurées selon la norme de l'étiquette énergie (règlement UE 2019/2016). Nous gardons les modèles publiés et toujours en vente, puis nous les rapprochons des fiches produits de marchands français. <a href="/methodologie/">Notre méthodologie complète</a>.</p>
+    </section>
+  </div>
+</BaseLayout>
+<style>
+  .kpis { margin: 18px 0 8px; }
+  .kpis .card { display: flex; flex-direction: column; gap: 2px; padding: 16px 18px; }
+  .kpis b { font-family: var(--font-head); font-size: 1.5rem; color: var(--night); }
+  .clsrow { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .clsrow .num { min-width: 64px; text-align: right; font-variant-numeric: tabular-nums; }
+</style>

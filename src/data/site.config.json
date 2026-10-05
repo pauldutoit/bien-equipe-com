@@ -1,0 +1,22 @@
+{
+  "domain": "bien-equipe.com",
+  "siteName": "Bien Équipé",
+  "tagline": "L'électroménager choisi sur des données, pas sur des promesses",
+  "locale": "fr-FR",
+  "youtube": "",
+  "matomo": {
+    "url": "",
+    "siteId": ""
+  },
+  "legalName": "",
+  "legalForm": "",
+  "legalAddress": "",
+  "registrationNumber": "",
+  "publicationDirector": "",
+  "host": "Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, États-Unis",
+  "dataUpdated": "2026-10-05",
+  "electricity": {
+    "price": 0.2001,
+    "label": "Tarif Bleu EDF option Base 6 kVA, TTC, au 1er août 2026"
+  }
+}

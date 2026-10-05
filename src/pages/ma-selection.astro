@@ -1,0 +1,53 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import site from "../data/site.config.json";
+---
+<BaseLayout title="Ma sélection de réfrigérateurs" description="Comparez côte à côte les réfrigérateurs que vous avez mis de côté." indexable={false} crumbs={[{ label: "Ma sélection" }]}>
+  <div class="wrap" style="padding-top:18px">
+    <h1>Ma sélection</h1>
+    <p class="muted">Les modèles mis de côté restent dans ce navigateur, sans compte ni inscription.</p>
+    <div id="empty" class="card" hidden>
+      <p style="margin:0">Votre sélection est vide. Ajoutez des modèles avec le bouton « ☆ Ajouter à ma sélection » sur les fiches, les classements ou le <a href="/outils/quel-frigo-rentre/">calculateur de niche</a>.</p>
+    </div>
+    <div id="cmp" class="table-wrap" hidden></div>
+  </div>
+</BaseLayout>
+<script define:vars={{ price: site.electricity.price }}>
+  window.__price = price;
+</script>
+<script>
+  import { readSelection, toggleSelection } from "../lib/selection";
+  type Row = [string, string, string, number, number, number, number, string, number, number, number, number, number];
+  const fr = (n: number, d = 0) => n.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const price = (window as any).__price as number;
+  let all: Row[] = [];
+  function paint() {
+    const ids = readSelection();
+    const rows = ids.map((id) => all.find((r) => r[0] === id)).filter(Boolean) as Row[];
+    document.getElementById("empty")!.hidden = rows.length > 0;
+    const box = document.getElementById("cmp")!;
+    box.hidden = rows.length === 0;
+    if (!rows.length) return;
+    const best = (i: number, low: boolean) => { const v = rows.map((r) => r[i] as number); return low ? Math.min(...v) : Math.max(...v); };
+    const line = (label: string, i: number, f: (r: Row) => string, low?: boolean) =>
+      `<tr><th>${label}</th>${rows.map((r) => `<td${low !== undefined && r[i] === best(i, low) && rows.length > 1 ? ' style="font-weight:800;color:var(--good)"' : ""}>${f(r)}</td>`).join("")}</tr>`;
+    box.innerHTML = `<table><thead><tr><th></th>${rows.map((r) => `<th><a href="/avis/${r[0]}/">${r[1]}</a><br><button class="btn ghost small" data-rm="${r[0]}" type="button">Retirer</button></th>`).join("")}</tr></thead><tbody>
+      ${line("Note globale", 10, (r) => fr(r[10], 1) + "/10", false)}
+      ${line("Largeur", 3, (r) => fr(r[3], 1) + " cm")}
+      ${line("Hauteur", 4, (r) => fr(r[4], 1) + " cm")}
+      ${line("Profondeur", 5, (r) => fr(r[5], 1) + " cm")}
+      ${line("Volume total", 6, (r) => r[6] + " L", false)}
+      ${line("Classe énergie", 7, (r) => `<span class="energy energy-${r[7]}">${r[7]}</span>`)}
+      ${line("Consommation", 8, (r) => r[8] + " kWh/an", true)}
+      ${line("Coût par an", 8, (r) => fr(r[8] * price) + " €", true)}
+      ${line("Bruit", 9, (r) => r[9] + " dB", true)}
+      ${line("No Frost", 12, (r) => (r[12] ? "Oui" : "Non"))}
+    </tbody></table>`;
+  }
+  document.addEventListener("click", (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-rm]");
+    if (b) toggleSelection(b.dataset.rm!);
+  });
+  document.addEventListener("selection:change", paint);
+  fetch("/data/niche.json").then((r) => r.json()).then((d) => { all = d; paint(); });
+</script>

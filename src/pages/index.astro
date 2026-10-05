@@ -1,0 +1,117 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ProductCard from "../components/ProductCard.astro";
+import market from "../data/market.json";
+import site from "../data/site.config.json";
+import { fridges, FACETS, facetItems, duels, duelSlug, brands, fmt, sortDefault, YEAR } from "../lib/catalog";
+
+const types = FACETS.filter((f) => f.group === "Type").map((fc) => ({ fc, n: facetItems(fc).length, best: facetItems(fc)[0] }));
+const criteres = FACETS.filter((f) => f.group !== "Type");
+const picks = ["combine", "americain", "encastrable"].map((t) => [...fridges].filter((f) => f.type === t).sort(sortDefault)[0]).filter(Boolean);
+const someDuels = duels().slice(0, 6);
+const totalCls = Object.values(market.classShare).reduce((a, b) => a + (b as number), 0);
+const eShare = Math.round(((market.classShare.E as number) / totalCls) * 100);
+const ld = {
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "WebSite", name: site.siteName, url: `https://${site.domain}/`, inLanguage: "fr-FR" },
+    { "@type": "Organization", name: site.siteName, url: `https://${site.domain}/`, logo: `https://${site.domain}/favicon.svg` },
+  ],
+};
+---
+<BaseLayout title={`Bien Équipé : quel réfrigérateur choisir en ${YEAR} ?`} description={`${fridges.length} réfrigérateurs vendus en France notés sur leurs données officielles (consommation, bruit, volume, dimensions). Calculateur de niche, duels et classements sans emplacement payé.`}>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(ld)} />
+  <section class="hero home-hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow" style="color:#ffd23f">Réfrigérateurs · {fridges.length} modèles analysés</p>
+        <h1>Le bon frigo, c'est d'abord celui qui rentre. Ensuite, celui qui consomme le moins.</h1>
+        <p>Nous comparons les réfrigérateurs vendus en France sur les mesures que chaque fabricant doit déclarer à l'Union européenne : dimensions au millimètre, consommation, bruit, volumes. Pas de test maison invérifiable, pas d'emplacement payé.</p>
+      </div>
+      <form class="card quick" action="/outils/quel-frigo-rentre/" method="get">
+        <h2 style="margin:0 0 4px;font-size:1.2rem">Quelle place avez-vous ?</h2>
+        <p class="small muted" style="margin:0 0 12px">En centimètres. Vous pourrez affiner ensuite.</p>
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px">
+          <div class="field"><label for="qw">Largeur</label><input id="qw" name="w" type="number" inputmode="decimal" placeholder="60" /></div>
+          <div class="field"><label for="qh">Hauteur</label><input id="qh" name="h" type="number" inputmode="decimal" placeholder="190" /></div>
+        </div>
+        <div class="field" style="margin-top:10px"><label for="qm">Installation</label>
+          <select id="qm" name="mode"><option value="libre">Pose libre</option><option value="encastrable">Encastrable</option></select>
+        </div>
+        <button class="btn" type="submit" style="width:100%;margin-top:14px">Voir les frigos qui rentrent</button>
+      </form>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <section>
+      <h2>Par format</h2>
+      <div class="grid grid-4">
+        {types.map(({ fc, n, best }) => (
+          <a class="card tile" href={`/refrigerateur/${fc.slug}/`}>
+            <h3>{fc.short}</h3>
+            <p class="small muted">{n} modèles</p>
+            {best && <p class="small" style="margin:0">N° 1 : <b>{best.name}</b> ({fmt(best.scores.global, 1)}/10)</p>}
+          </a>
+        ))}
+      </div>
+      <div class="chips" style="margin-top:16px">
+        {criteres.map((fc) => <a href={`/refrigerateur/${fc.slug}/`}>{fc.h1.replace(` ${YEAR}`, "").replace("Meilleur réfrigérateur ", "Réfrigérateur ")}</a>)}
+      </div>
+    </section>
+
+    <section>
+      <h2>Les numéros 1 de nos classements</h2>
+      <div class="grid grid-3">{picks.map((f) => <ProductCard f={f} note={`Meilleure note des ${f.typeLabel.toLowerCase().replace("réfrigérateur ", "")}s.`} />)}</div>
+      <p style="margin-top:14px"><a href="/refrigerateur/">Voir le classement complet des {fridges.length} réfrigérateurs →</a></p>
+    </section>
+
+    <section class="grid grid-3 why">
+      <div class="card">
+        <h3>Des données, pas des promesses</h3>
+        <p>Toutes nos fiches reposent sur la base officielle EPREL : les valeurs mesurées selon la norme de l'étiquette énergie, avec un lien vers la source.</p>
+      </div>
+      <div class="card">
+        <h3>La même règle pour tous</h3>
+        <p>Quatre notes calculées de la même façon pour chaque modèle : efficacité, silence, volume utile, équipements. <a href="/methodologie/">Voir la méthode</a>.</p>
+      </div>
+      <div class="card">
+        <h3>Personne ne paie pour être là</h3>
+        <p>Aucune marque ne paie pour figurer ou monter dans un classement. Les liens vers les marchands sont directs. <a href="/transparence/">Notre transparence</a>.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Ils se disputent la première place</h2>
+      <div class="chips">{someDuels.map(([a, b]) => <a href={`/comparatif/${duelSlug(a, b)}/`}>{a.name} ou {b.name} ?</a>)}</div>
+      <p style="margin-top:12px"><a href="/comparatif/">Tous les duels →</a></p>
+    </section>
+
+    <section class="card market">
+      <div>
+        <p class="eyebrow">État du marché</p>
+        <h2 style="margin-top:4px">{eShare} % des réfrigérateurs en vente sont classés E</h2>
+        <p class="muted">Sur {fmt(market.liveFridges)} réfrigérateurs déclarés en Europe. Les classes A et B restent rares : voilà pourquoi la consommation en kWh/an compte plus que la lettre.</p>
+        <a class="btn ghost" href="/etat-du-marche/">Voir l'observatoire</a>
+      </div>
+    </section>
+
+    <section>
+      <h2>Marques</h2>
+      <div class="chips">{brands.filter((b) => b.items.length >= 3).map((b) => <a href={`/marques/${b.slug}/`}>{b.name} ({b.items.length})</a>)}</div>
+    </section>
+  </div>
+</BaseLayout>
+<style>
+  .home-hero { padding: 54px 0 60px; }
+  .hero-grid { display: grid; grid-template-columns: 1fr 360px; gap: 40px; align-items: center; }
+  .quick { color: var(--ink); }
+  .hero .quick p { color: var(--sub); }
+  .tile { text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 4px; }
+  .tile h3 { margin: 0; }
+  .tile p { margin: 0; }
+  .tile:hover { border-color: var(--blue); }
+  .why { margin-top: 34px; }
+  .market { margin-top: 34px; background: linear-gradient(135deg, #fff, var(--blue-tint)); }
+  @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; } }
+</style>

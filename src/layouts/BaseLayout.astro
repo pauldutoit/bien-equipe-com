@@ -1,0 +1,157 @@
+---
+import "../styles/global.css";
+import Logo from "../components/Logo.astro";
+import site from "../data/site.config.json";
+
+interface Crumb { label: string; href?: string }
+interface Props {
+  title: string;
+  description: string;
+  indexable?: boolean;
+  crumbs?: Crumb[];
+  ogType?: string;
+}
+const { title, description, indexable = true, crumbs = [], ogType = "website" } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const fullTitle = title.includes(site.siteName) ? title : `${title} | ${site.siteName}`;
+const path = Astro.url.pathname;
+const nav = [
+  { href: "/refrigerateur/", label: "Réfrigérateurs" },
+  { href: "/outils/quel-frigo-rentre/", label: "Calculateur de niche" },
+  { href: "/comparatif/", label: "Duels" },
+  { href: "/guides/", label: "Guides" },
+  { href: "/etat-du-marche/", label: "État du marché" },
+];
+const breadcrumbLd = crumbs.length
+  ? {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [{ label: "Accueil", href: "/" }, ...crumbs].map((c, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: c.label,
+        ...(c.href ? { item: new URL(c.href, Astro.site).href } : {}),
+      })),
+    }
+  : null;
+---
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={indexable ? "index,follow,max-image-preview:large" : "noindex,follow"} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={site.siteName} />
+    <meta property="og:locale" content="fr_FR" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet" />
+    {breadcrumbLd && <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />}
+    <slot name="head" />
+    {site.matomo.url && site.matomo.siteId && (
+      <script is:inline define:vars={{ u: site.matomo.url, id: site.matomo.siteId }}>
+        var _paq = (window._paq = window._paq || []);
+        _paq.push(["disableCookies"], ["trackPageView"], ["enableLinkTracking"]);
+        (function () {
+          _paq.push(["setTrackerUrl", u + "matomo.php"], ["setSiteId", id]);
+          var g = document.createElement("script");
+          g.async = true; g.src = u + "matomo.js";
+          document.head.appendChild(g);
+        })();
+      </script>
+    )}
+  </head>
+  <body>
+    <a class="skip" href="#contenu">Aller au contenu</a>
+    <header class="site-header">
+      <div class="wrap">
+        <a class="brand" href="/"><Logo size={34} /> {site.siteName}</a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav">Menu</button>
+        <nav class="nav" id="nav" aria-label="Navigation principale">
+          {nav.map((n) => (
+            <a href={n.href} aria-current={path.startsWith(n.href) ? "page" : undefined}>{n.label}</a>
+          ))}
+          <a href="/ma-selection/">Ma sélection <span class="sel-count" data-sel-count hidden>0</span></a>
+        </nav>
+      </div>
+    </header>
+    {crumbs.length > 0 && (
+      <div class="wrap crumbs">
+        <a href="/">Accueil</a>
+        {crumbs.map((c) => (
+          <>
+            <span aria-hidden="true">›</span>
+            {c.href ? <a href={c.href}>{c.label}</a> : <span>{c.label}</span>}
+          </>
+        ))}
+      </div>
+    )}
+    <main id="contenu">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="wrap">
+        <div class="grid grid-4">
+          <div>
+            <a class="brand" href="/"><Logo size={30} /> {site.siteName}</a>
+            <p style="margin-top:12px">{site.tagline}. Fiches construites à partir des données officielles de l'étiquette énergie européenne (EPREL).</p>
+          </div>
+          <div>
+            <h4>Réfrigérateurs</h4>
+            <ul>
+              <li><a href="/refrigerateur/">Meilleur réfrigérateur</a></li>
+              <li><a href="/refrigerateur/combine/">Réfrigérateur combiné</a></li>
+              <li><a href="/refrigerateur/americain/">Réfrigérateur américain</a></li>
+              <li><a href="/refrigerateur/encastrable/">Réfrigérateur encastrable</a></li>
+              <li><a href="/refrigerateur/silencieux/">Réfrigérateur silencieux</a></li>
+              <li><a href="/marques/">Toutes les marques</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Outils</h4>
+            <ul>
+              <li><a href="/outils/quel-frigo-rentre/">Quel frigo rentre dans ma niche ?</a></li>
+              <li><a href="/outils/cout-electricite-frigo/">Coût d'électricité d'un frigo</a></li>
+              <li><a href="/comparatif/">Duels de réfrigérateurs</a></li>
+              <li><a href="/ma-selection/">Ma sélection</a></li>
+              <li><a href="/etat-du-marche/">État du marché</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Le site</h4>
+            <ul>
+              <li><a href="/methodologie/">Méthodologie et notes</a></li>
+              <li><a href="/transparence/">Transparence</a></li>
+              <li><a href="/qui-sommes-nous/">Qui sommes-nous</a></li>
+              <li><a href="/contact/">Contact</a></li>
+              <li><a href="/mentions-legales/">Mentions légales</a></li>
+              <li><a href="/politique-confidentialite/">Confidentialité</a></li>
+            </ul>
+          </div>
+        </div>
+        <p class="legal">
+          Aucune marque ne paie pour figurer sur {site.siteName} ni pour améliorer sa note. Données techniques : base EPREL de la Commission européenne, mise à jour le {new Date(site.dataUpdated).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}.
+          © {new Date().getFullYear()} {site.siteName}.
+        </p>
+      </div>
+    </footer>
+    <script>
+      import { initSelection } from "../lib/selection";
+      const t = document.querySelector<HTMLButtonElement>(".menu-toggle");
+      const n = document.getElementById("nav");
+      t?.addEventListener("click", () => {
+        const open = n?.classList.toggle("open");
+        t.setAttribute("aria-expanded", String(!!open));
+      });
+      initSelection();
+    </script>
+  </body>
+</html>

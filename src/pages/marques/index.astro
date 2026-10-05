@@ -1,0 +1,26 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { brands, median, fmt } from "../../lib/catalog";
+const rows = brands.map((b) => ({
+  ...b,
+  med: median(b.items.map((f) => f.scores.global)),
+  kwh: median(b.items.map((f) => f.kwh)),
+  noise: median(b.items.map((f) => f.noise)),
+}));
+---
+<BaseLayout title="Marques de réfrigérateurs : laquelle choisir ?" description={`${brands.length} marques de réfrigérateurs vendues en France comparées sur la note médiane de leurs modèles, leur consommation et leur bruit.`} crumbs={[{ label: "Marques" }]}>
+  <div class="wrap">
+    <h1 style="padding-top:18px">Marques de réfrigérateurs</h1>
+    <p class="muted" style="max-width:760px">Une marque n'est pas une garantie : l'écart entre deux modèles d'une même marque est souvent plus grand qu'entre deux marques. Ce tableau donne la tendance, les fiches donnent la réponse.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Marque</th><th class="num">Modèles</th><th class="num">Note médiane</th><th class="num">kWh/an médian</th><th class="num">dB médian</th></tr></thead>
+        <tbody>
+          {rows.map((b) => (
+            <tr><td><a href={`/marques/${b.slug}/`}>{b.name}</a></td><td class="num">{b.items.length}</td><td class="num"><b>{fmt(b.med, 1)}</b></td><td class="num">{b.kwh}</td><td class="num">{b.noise}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</BaseLayout>

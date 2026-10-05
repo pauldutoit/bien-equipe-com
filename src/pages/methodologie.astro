@@ -1,0 +1,50 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import site from "../data/site.config.json";
+import market from "../data/market.json";
+import { fridges, fmt } from "../lib/catalog";
+---
+<BaseLayout title="Méthodologie : comment nous notons les réfrigérateurs" description="D'où viennent nos données, comment nous calculons les quatre notes sur 10 et ce que nous ne faisons pas. La même règle pour chaque modèle." crumbs={[{ label: "Méthodologie" }]}>
+  <div class="wrap prose" style="padding-top:18px">
+    <h1>Méthodologie : comment nous notons les réfrigérateurs</h1>
+    <p class="callout"><strong>En bref :</strong> nous ne testons pas les appareils dans un laboratoire. Nous partons des mesures officielles que chaque fabricant doit déclarer à l'Union européenne, et nous leur appliquons la même grille de notation, publiée ici en entier.</p>
+
+    <h2>1. La source : la base européenne EPREL</h2>
+    <p>Depuis 2019, tout appareil vendu avec une étiquette énergie dans l'Union européenne doit être enregistré dans <a href="https://eprel.ec.europa.eu/" rel="nofollow noopener" target="_blank">EPREL</a>, la base de la Commission européenne. Pour un réfrigérateur, le fabricant y déclare les valeurs mesurées selon la norme du règlement (UE) 2019/2016 : consommation annuelle, indice d'efficacité énergétique, niveau sonore, volume de chaque compartiment, dimensions, classe climatique, type de dégivrage, durée de garantie.</p>
+    <p>Notre dernière importation, le {new Date(market.updated).toLocaleDateString("fr-FR")}, porte sur {fmt(market.totalEprel)} fiches. Nous gardons les modèles publiés et toujours en vente, soit {fmt(market.liveFridges)} réfrigérateurs.</p>
+
+    <h2>2. Vendu en France : le rapprochement avec les marchands</h2>
+    <p>EPREL couvre toute l'Europe. Un modèle n'entre dans notre catalogue que si nous retrouvons sa référence dans le catalogue en ligne d'au moins un marchand français. C'est aussi ce qui nous permet de lier chaque fiche à une page produit réelle. Aujourd'hui : {fridges.length} réfrigérateurs.</p>
+    <p>Quand plusieurs références ont exactement les mêmes dimensions, volumes, consommation et niveau sonore, il s'agit du même appareil dans une autre finition : nous les regroupons dans une seule fiche.</p>
+
+    <h2>3. Les quatre notes sur 10</h2>
+    <p>Chaque modèle reçoit quatre notes, calculées avec les mêmes formules pour tous. La note globale est leur moyenne pondérée.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Note</th><th>Poids</th><th>Ce qu'elle mesure</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Efficacité énergétique</strong></td><td>35 %</td><td>L'indice d'efficacité énergétique officiel (EEI), qui rapporte la consommation au volume et au type de compartiments. 10/10 pour un EEI de 35 (haut de la classe A), environ 5/10 pour un EEI de 97 (classe E).</td></tr>
+          <tr><td><strong>Silence</strong></td><td>20 %</td><td>Le niveau sonore déclaré en dB(A). 10/10 à 30 dB, on perd 0,5 point par décibel au-dessus.</td></tr>
+          <tr><td><strong>Volume utile / encombrement</strong></td><td>20 %</td><td>Les litres utiles divisés par le volume extérieur de l'appareil (largeur × hauteur × profondeur). Un ratio élevé signifie des parois fines et plus de place dans la même niche. 5/10 vers 47 %, 10/10 à 60 %.</td></tr>
+          <tr><td><strong>Équipements</strong></td><td>25 %</td><td>Les fonctions vérifiables dans la donnée officielle : congélateur No Frost (+2,5), dégivrage automatique du réfrigérateur (+0,5), congélation rapide (+1), zone fraîcheur à 0 °C (+1), compartiment à température variable (+0,5), classe climatique T (+1), réglage hiver (+0,5), garantie déclarée au-delà de 2 ans (+0,5). Base : 3 points.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Pourquoi ce choix ? La consommation pèse sur la facture pendant 10 à 15 ans, le bruit sur le confort quotidien, le volume utile sur ce que vous rangerez réellement dans votre niche. Le design, la qualité perçue des bacs ou la fiabilité à long terme ne figurent pas dans une donnée officielle : nous ne les notons donc pas, plutôt que de les inventer.</p>
+
+    <h2>4. Le coût d'usage</h2>
+    <p>Le coût annuel affiché multiplie la consommation de l'étiquette par le prix du kWh au {site.electricity.label.replace("Tarif", "tarif")} ({fmt(site.electricity.price, 4)} €). La consommation réelle varie avec la température de la pièce, le réglage et les ouvertures de porte : c'est un ordre de grandeur pour comparer, pas une promesse.</p>
+
+    <h2>5. Les limites, dites franchement</h2>
+    <ul>
+      <li>Les valeurs sont déclarées par les fabricants. Les autorités de surveillance du marché contrôlent des échantillons, mais nous ne remesurons pas.</li>
+      <li>Le type (combiné, 2 portes…) est déduit des compartiments, des dimensions et du libellé marchand. Une erreur reste possible : signalez-la-nous.</li>
+      <li>Nous n'affichons pas encore les prix : ils changent chaque semaine. Les boutons « Voir le prix » mènent directement aux fiches des marchands.</li>
+      <li>Les avis rédigés à la main, quand ils existent, sont signalés comme tels sur la fiche.</li>
+    </ul>
+
+    <h2>6. Mises à jour</h2>
+    <p>Nous réimportons la base EPREL et les catalogues marchands régulièrement. Un modèle retiré du marché sort du catalogue ; un nouveau modèle y entre dès qu'il est déclaré et vendu en France.</p>
+    <p class="small muted">Dernière mise à jour des données : {new Date(market.updated).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}.</p>
+  </div>
+</BaseLayout>

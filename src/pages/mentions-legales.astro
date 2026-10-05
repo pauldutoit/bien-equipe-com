@@ -1,0 +1,27 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import site from "../data/site.config.json";
+const missing = !site.legalName || !site.legalAddress;
+if (missing) console.warn("[mentions-legales] legalName / legalAddress à compléter dans src/data/site.config.json");
+---
+<BaseLayout title="Mentions légales" description="Mentions légales du site Bien Équipé." crumbs={[{ label: "Mentions légales" }]}>
+  <div class="wrap prose" style="padding-top:18px">
+    <h1>Mentions légales</h1>
+    <h2>Éditeur</h2>
+    <p>
+      Le site {site.domain} est édité par {site.legalName || "[raison sociale à compléter]"}{site.legalForm && `, ${site.legalForm}`}.<br />
+      Adresse : {site.legalAddress || "[adresse à compléter]"}<br />
+      {site.registrationNumber && <>Immatriculation : {site.registrationNumber}<br /></>}
+      Directeur de la publication : {site.publicationDirector || "[à compléter]"}<br />
+      Contact : <a href="/contact/">formulaire de contact</a>
+    </p>
+    <h2>Hébergement</h2>
+    <p>{site.host}</p>
+    <h2>Données</h2>
+    <p>Les caractéristiques techniques proviennent de la base EPREL de la Commission européenne (réutilisation des informations publiques). Les marques et références citées appartiennent à leurs propriétaires respectifs.</p>
+    <h2>Liens vers les marchands</h2>
+    <p>Les liens vers les sites marchands sont fournis à titre d'information. {site.siteName} ne vend aucun produit et n'est pas responsable des prix, de la disponibilité ou des conditions de vente des marchands.</p>
+    <h2>Propriété intellectuelle</h2>
+    <p>Les textes, notes, outils et visuels du site sont la propriété de l'éditeur. Toute reproduction substantielle sans autorisation est interdite.</p>
+  </div>
+</BaseLayout>

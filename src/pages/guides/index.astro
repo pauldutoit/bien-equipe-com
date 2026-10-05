@@ -1,0 +1,26 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+const guides = (await getCollection("guides")).filter((g) => !g.data.draft).sort((a, b) => +b.data.publishDate - +a.data.publishDate);
+const rubriques = [...new Set(guides.map((g) => g.data.rubrique))];
+---
+<BaseLayout title="Guides pour bien choisir son réfrigérateur" description="Dimensions, consommation, No Frost, bruit : nos guides pour choisir un réfrigérateur sans se tromper, chiffres officiels à l'appui." crumbs={[{ label: "Guides" }]}>
+  <div class="wrap" style="padding-top:18px">
+    <h1>Guides pour bien choisir</h1>
+    <p class="muted" style="max-width:760px">Chaque guide répond à une question précise, avec les chiffres de notre catalogue.</p>
+    {rubriques.map((r) => (
+      <section>
+        <h2>{r}</h2>
+        <div class="grid grid-3">
+          {guides.filter((g) => g.data.rubrique === r).map((g) => (
+            <a class="card" href={`/guides/${g.id}/`} style="text-decoration:none;color:inherit">
+              <h3>{g.data.h1}</h3>
+              <p class="small muted" style="margin:0">{g.data.description}</p>
+              {g.data.readingMinutes && <p class="small" style="margin:8px 0 0">{g.data.readingMinutes} min de lecture</p>}
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+  </div>
+</BaseLayout>

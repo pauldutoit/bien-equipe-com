@@ -1,0 +1,22 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import site from "../data/site.config.json";
+---
+<BaseLayout title="Transparence : comment Bien Équipé est financé" description="Pas d'emplacement payé, pas de note achetée. Comment le site est financé et ce que nous nous interdisons." crumbs={[{ label: "Transparence" }]}>
+  <div class="wrap prose" style="padding-top:18px">
+    <h1>Transparence</h1>
+    <h2>Ce que nous nous interdisons</h2>
+    <ul>
+      <li>Vendre un emplacement dans un classement ou une meilleure note.</li>
+      <li>Modifier une note pour une raison commerciale : les notes sortent des formules publiées dans la <a href="/methodologie/">méthodologie</a>, appliquées à tous.</li>
+      <li>Afficher de la publicité sur le site.</li>
+      <li>Prétendre avoir testé un appareil que nous n'avons pas eu entre les mains.</li>
+    </ul>
+    <h2>Comment le site est financé</h2>
+    <p>À ce jour, les liens vers les marchands sont des liens directs : nous ne touchons aucune commission quand vous achetez. Si nous rejoignons un jour des programmes d'affiliation, ce sera indiqué ici et à côté des liens concernés. Le prix pour vous restera le même, et le classement ne changera pas selon la commission.</p>
+    <h2>La chaîne YouTube</h2>
+    <p>{site.siteName} publie aussi des avis vidéo d'appareils électroménagers. Les vidéos s'appuient sur les mêmes données et la même méthode que le site.</p>
+    <h2>Une erreur ?</h2>
+    <p>Une dimension fausse, un modèle mal classé, une référence qui n'existe plus : <a href="/contact/">écrivez-nous</a>, nous corrigeons.</p>
+  </div>
+</BaseLayout>

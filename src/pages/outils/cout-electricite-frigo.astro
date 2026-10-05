@@ -1,0 +1,46 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import site from "../../data/site.config.json";
+import market from "../../data/market.json";
+import { fmt } from "../../lib/catalog";
+const p = site.electricity.price;
+const classes = Object.entries(market.medianKwhByClass).filter(([, v]) => v);
+---
+<BaseLayout title="Combien consomme un réfrigérateur ? Calculez son coût par an" description={`Calculez le coût annuel d'un réfrigérateur à partir de sa consommation en kWh. Prix de l'électricité : ${fmt(p, 4)} €/kWh (${site.electricity.label}).`} crumbs={[{ label: "Outils" }, { label: "Coût d'électricité d'un frigo" }]}>
+  <div class="wrap prose" style="padding-top:18px">
+    <h1>Combien coûte un réfrigérateur en électricité ?</h1>
+    <p>La consommation annuelle (en kWh) figure sur l'étiquette énergie de chaque appareil. Multipliez-la par le prix du kWh : c'est le coût de fonctionnement sur un an, dans les conditions normalisées du test.</p>
+    <form class="card" id="cost" style="max-width:560px">
+      <div class="grid grid-2">
+        <div class="field"><label for="kwh">Consommation (kWh/an)</label><input id="kwh" type="number" value="200" min="20" max="1500" /></div>
+        <div class="field"><label for="price">Prix du kWh (€)</label><input id="price" type="number" step="0.0001" value={p} /></div>
+        <div class="field"><label for="kwh2">Comparer avec (kWh/an)</label><input id="kwh2" type="number" value="300" min="0" max="1500" /></div>
+        <div class="field"><label for="years">Durée (années)</label><input id="years" type="number" value="10" min="1" max="25" /></div>
+      </div>
+      <p style="margin:18px 0 0;font-size:1.1rem" id="res"></p>
+    </form>
+    <p class="small muted">Prix par défaut : {site.electricity.label}, {fmt(p, 4)} €/kWh. Remplacez-le par celui de votre contrat.</p>
+
+    <h2>Consommation médiane selon la classe énergétique</h2>
+    <p>Sur les {fmt(market.liveFridges)} réfrigérateurs en vente enregistrés dans la base européenne EPREL :</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Classe</th><th class="num">kWh/an (médiane)</th><th class="num">Coût par an</th><th class="num">Sur 10 ans</th></tr></thead>
+        <tbody>{classes.map(([c, v]) => <tr><td><span class={`energy energy-${c}`}>{c}</span></td><td class="num">{v}</td><td class="num">{fmt((v as number) * p)} €</td><td class="num">{fmt((v as number) * p * 10)} €</td></tr>)}</tbody>
+      </table>
+    </div>
+    <p class="callout">La classe énergétique compare un appareil aux autres <em>de même volume</em>. Un grand américain classé D peut consommer plus qu'un petit combiné classé E. Pour votre facture, regardez les kWh/an, pas seulement la lettre.</p>
+  </div>
+</BaseLayout>
+<script>
+  const $ = (id: string) => document.getElementById(id) as HTMLInputElement;
+  const fr = (n: number) => n.toLocaleString("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+  function calc() {
+    const k = +$("kwh").value, k2 = +$("kwh2").value, p = +$("price").value, y = +$("years").value;
+    const a = k * p, b = k2 * p;
+    $("res" as any);
+    document.getElementById("res")!.innerHTML = `<b>${fr(a)}</b> par an, <b>${fr(a * y)}</b> sur ${y} ans.` + (k2 ? `<br>Écart avec l'autre modèle : <b>${fr(Math.abs(b - a) * y)}</b> sur ${y} ans.` : "");
+  }
+  document.getElementById("cost")!.addEventListener("input", calc);
+  calc();
+</script>

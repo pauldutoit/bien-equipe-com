@@ -1,0 +1,41 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import site from "../../data/site.config.json";
+export async function getStaticPaths() {
+  const guides = (await getCollection("guides")).filter((g) => !g.data.draft);
+  return guides.map((g) => ({ params: { slug: g.id }, props: { g } }));
+}
+const { g } = Astro.props;
+const { Content } = await render(g);
+const others = (await getCollection("guides")).filter((x) => !x.data.draft && x.id !== g.id).slice(0, 4);
+const d = (x: Date) => x.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+const ld = {
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "Article", headline: g.data.h1, description: g.data.description, datePublished: g.data.publishDate.toISOString(), dateModified: (g.data.updated ?? g.data.publishDate).toISOString(), author: { "@type": "Organization", name: site.siteName }, publisher: { "@type": "Organization", name: site.siteName } },
+    ...(g.data.faq.length ? [{ "@type": "FAQPage", mainEntity: g.data.faq.map((x: any) => ({ "@type": "Question", name: x.q, acceptedAnswer: { "@type": "Answer", text: x.a } })) }] : []),
+  ],
+};
+---
+<BaseLayout title={g.data.title} description={g.data.description} ogType="article" crumbs={[{ label: "Guides", href: "/guides/" }, { label: g.data.h1 }]}>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(ld)} />
+  <article class="wrap prose" style="padding-top:18px">
+    <p class="eyebrow">{g.data.rubrique}</p>
+    <h1>{g.data.h1}</h1>
+    <p class="small muted">Publié le {d(g.data.publishDate)}{g.data.updated && ` · mis à jour le ${d(g.data.updated)}`}{g.data.readingMinutes && ` · ${g.data.readingMinutes} min`}</p>
+    <Content />
+    {g.data.faq.length > 0 && (
+      <section>
+        <h2>Questions fréquentes</h2>
+        {g.data.faq.map((x: any) => <details class="faq"><summary>{x.q}</summary><p>{x.a}</p></details>)}
+      </section>
+    )}
+    {others.length > 0 && (
+      <section>
+        <h2>À lire aussi</h2>
+        <ul>{others.map((o) => <li><a href={`/guides/${o.id}/`}>{o.data.h1}</a></li>)}</ul>
+      </section>
+    )}
+  </article>
+</BaseLayout>

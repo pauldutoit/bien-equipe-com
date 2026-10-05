@@ -1,0 +1,23 @@
+---
+import Energy from "./Energy.astro";
+import { type Fridge, dims, fmt, euros, yearlyCost } from "../lib/catalog";
+interface Props { f: Fridge; rank?: number; note?: string }
+const { f, rank, note } = Astro.props;
+---
+<article class="pcard">
+  {rank && <span class="rank">{rank}</span>}
+  <div class="row">
+    <span class="pill">{f.typeLabel.replace("Réfrigérateur ", "")}</span>
+    <span class="score" title="Note globale Bien Équipé"><b>{fmt(f.scores.global, 1)}</b><small>/10</small></span>
+  </div>
+  <h3><a href={`/avis/${f.id}/`}>{f.name}</a></h3>
+  <div class="dims">{dims(f)} · {f.totalVolume} L</div>
+  <div class="meta">
+    <Energy cls={f.energyClass} />
+    <span class="pill">{f.kwh} kWh/an · {euros(yearlyCost(f))}/an</span>
+    <span class="pill">{f.noise} dB</span>
+    {f.noFrost && <span class="pill green">No Frost</span>}
+  </div>
+  {note && <p class="small muted" style="margin:0">{note}</p>}
+  <button class="btn ghost small sel" type="button" data-sel-toggle={f.id} aria-pressed="false">☆ Ajouter à ma sélection</button>
+</article>

@@ -1,0 +1,4 @@
+---
+const { cls } = Astro.props as { cls: string };
+---
+<span class={`energy energy-${cls}`} title={`Classe énergétique ${cls} (échelle A à G)`}>{cls}</span>

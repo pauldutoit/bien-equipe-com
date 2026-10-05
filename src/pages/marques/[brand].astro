@@ -1,0 +1,20 @@
+---
+import RankingPage from "../../components/RankingPage.astro";
+import { brands, YEAR, typeStats, median, fmt } from "../../lib/catalog";
+export function getStaticPaths() {
+  return brands.map((b) => ({ params: { brand: b.slug }, props: { b } }));
+}
+const { b } = Astro.props as { b: (typeof brands)[number] };
+const med = median(b.items.map((f) => f.scores.global));
+const types = [...new Set(b.items.map((f) => f.typeLabel.replace("Réfrigérateur ", "")))];
+const better = b.items.filter((f) => f.scores.global > typeStats[f.type].global).length;
+---
+<RankingPage
+  title={`Réfrigérateur ${b.name} : avis et classement des ${b.items.length} modèles (${YEAR})`}
+  description={`Quel réfrigérateur ${b.name} choisir ? ${b.items.length} modèles vendus en France comparés sur leur consommation, leur bruit et leur volume, d'après les données officielles.`}
+  h1={`Réfrigérateur ${b.name} : lequel choisir ?`}
+  intro={`${b.items.length} réfrigérateurs ${b.name} vendus en France (${types.join(", ").toLowerCase()}). Note médiane : ${fmt(med, 1)}/10. ${better} modèle${better > 1 ? "s font" : " fait"} mieux que la médiane de leur catégorie.`}
+  items={b.items}
+  crumbs={[{ label: "Marques", href: "/marques/" }, { label: b.name }]}
+  showFacets={false}
+/>

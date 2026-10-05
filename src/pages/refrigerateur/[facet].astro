@@ -1,0 +1,18 @@
+---
+import RankingPage from "../../components/RankingPage.astro";
+import { FACETS, type Facet, facetItems } from "../../lib/catalog";
+export function getStaticPaths() {
+  return FACETS.map((fc) => ({ params: { facet: fc.slug }, props: { slug: fc.slug } }));
+}
+const fc = FACETS.find((x) => x.slug === Astro.props.slug) as Facet;
+const items = facetItems(fc);
+---
+<RankingPage
+  title={fc.title}
+  description={`${fc.intro.split(". ")[0]}. ${items.length} modèles comparés sur données officielles : consommation, bruit, volume, dimensions.`}
+  h1={fc.h1}
+  intro={fc.intro}
+  items={items}
+  current={fc.slug}
+  crumbs={[{ label: "Réfrigérateurs", href: "/refrigerateur/" }, { label: fc.short }]}
+/>

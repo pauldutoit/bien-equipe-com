@@ -1,0 +1,175 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import site from "../../data/site.config.json";
+import { fridges, TYPES_ORDER } from "../../lib/catalog";
+const typeLabels = Object.fromEntries(TYPES_ORDER.map((t) => [t, fridges.find((f) => f.type === t)?.typeLabel.replace("Réfrigérateur ", "") || t]));
+const faq = [
+  { q: "Quel espace laisser autour d'un réfrigérateur en pose libre ?", a: "Comptez environ 1 cm de chaque côté pour pouvoir le glisser, quelques centimètres au-dessus, et l'écart arrière indiqué par la notice (souvent 2 à 5 cm) pour que la chaleur du condenseur s'évacue. Un frigo coincé consomme plus et s'use plus vite." },
+  { q: "Comment mesurer une niche de réfrigérateur encastrable ?", a: "Mesurez la largeur intérieure de la colonne (souvent 56 cm), la hauteur intérieure de la niche (88, 102, 122, 140, 158 ou 178 cm sont les standards) et la profondeur (au moins 55 cm). Le réfrigérateur doit être légèrement plus petit que la niche : sa notice indique la hauteur de niche exacte." },
+  { q: "Faut-il tenir compte de l'ouverture de la porte ?", a: "Oui. Contre un mur, une porte qui ouvre à 90° ne permet pas toujours de sortir les bacs à légumes. Laissez si possible 5 à 10 cm entre le côté charnière et le mur, ou choisissez un modèle à charnières décalées." },
+  { q: "Et pour faire passer le frigo dans le logement ?", a: "Vérifiez la largeur des portes, du couloir et de l'escalier. Pour un américain (environ 90 cm de large), la profondeur hors portes et poignées est souvent la dimension qui passe : beaucoup de modèles permettent de démonter les portes." },
+];
+const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map((x) => ({ "@type": "Question", name: x.q, acceptedAnswer: { "@type": "Answer", text: x.a } })) };
+---
+<BaseLayout title="Quel réfrigérateur rentre dans ma niche ? Le calculateur" description={`Entrez la largeur, la hauteur et la profondeur de votre niche : le calculateur affiche les ${fridges.length} réfrigérateurs qui rentrent, classés par note, avec leur consommation.`} crumbs={[{ label: "Outils" }, { label: "Calculateur de niche" }]}>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(ld)} />
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow" style="color:#ffd23f">Calculateur de niche</p>
+      <h1>Quel réfrigérateur rentre chez vous ?</h1>
+      <p>Entrez vos mesures en centimètres. Nous filtrons {fridges.length} modèles vendus en France sur leurs dimensions officielles, marges de ventilation comprises.</p>
+    </div>
+  </section>
+  <div class="wrap calc">
+    <form class="card" id="calc" autocomplete="off">
+      <fieldset class="mode">
+        <legend class="small muted">Installation</legend>
+        <label><input type="radio" name="mode" value="libre" checked /> Pose libre</label>
+        <label><input type="radio" name="mode" value="encastrable" /> Encastrable (niche de cuisine)</label>
+      </fieldset>
+      <div class="grid fields">
+        <div class="field"><label for="w">Largeur disponible</label><input id="w" name="w" type="number" inputmode="decimal" min="30" max="200" step="0.5" placeholder="ex. 60" /></div>
+        <div class="field"><label for="h">Hauteur disponible</label><input id="h" name="h" type="number" inputmode="decimal" min="40" max="250" step="0.5" placeholder="ex. 190" /></div>
+        <div class="field"><label for="d">Profondeur (facultatif)</label><input id="d" name="d" type="number" inputmode="decimal" min="30" max="120" step="0.5" placeholder="ex. 70" /></div>
+        <div class="field"><label for="t">Type</label>
+          <select id="t" name="t"><option value="">Tous</option>{TYPES_ORDER.map((t) => <option value={t}>{typeLabels[t]}</option>)}</select>
+        </div>
+        <div class="field"><label for="v">Volume minimum</label>
+          <select id="v" name="v"><option value="0">Peu importe</option><option value="150">150 L</option><option value="250">250 L</option><option value="300">300 L</option><option value="350">350 L</option><option value="400">400 L</option><option value="500">500 L</option></select>
+        </div>
+        <div class="field"><label for="s">Trier par</label>
+          <select id="s" name="s"><option value="score">Note globale</option><option value="kwh">Consommation</option><option value="noise">Silence</option><option value="vol">Volume</option></select>
+        </div>
+      </div>
+      <div class="opts">
+        <label><input type="checkbox" name="nf" /> No Frost uniquement</label>
+        <label><input type="checkbox" name="quiet" /> 35 dB maximum</label>
+        <label class="libre-only"><input type="checkbox" name="tight" /> Sans marge (mesures déjà prises au plus juste)</label>
+      </div>
+      <p class="small muted hint" id="hint">Pose libre : nous gardons 2 cm de jeu en largeur et en hauteur, et 5 cm derrière l'appareil si vous indiquez une profondeur.</p>
+    </form>
+
+    <section id="out" aria-live="polite">
+      <h2 id="count">Entrez au moins une largeur ou une hauteur</h2>
+      <div class="grid grid-3" id="list"></div>
+      <p id="more" hidden><button class="btn ghost" type="button" id="moreBtn">Afficher plus de modèles</button></p>
+    </section>
+
+    <section class="prose">
+      <h2>Bien mesurer avant d'acheter</h2>
+      {faq.map((x) => <details class="faq"><summary>{x.q}</summary><p>{x.a}</p></details>)}
+      <p class="small muted">Données : dimensions déclarées par les fabricants dans la base européenne EPREL, mises à jour le {new Date(site.dataUpdated).toLocaleDateString("fr-FR")}. Vérifiez toujours la notice de montage avant de commander.</p>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  type Row = [string, string, string, number, number, number, number, string, number, number, number, number, number];
+  const TYPE_LABELS: Record<string, string> = {
+    combine: "Combiné", "deux-portes": "2 portes", "une-porte": "1 porte", americain: "Américain",
+    multiportes: "Multiportes", "table-top": "Table top", encastrable: "Encastrable", "sous-plan": "Sous plan",
+  };
+  const KEY = "be-projet";
+  const form = document.getElementById("calc") as HTMLFormElement;
+  const list = document.getElementById("list")!;
+  const count = document.getElementById("count")!;
+  const more = document.getElementById("more")!;
+  const hint = document.getElementById("hint")!;
+  let rows: Row[] = [];
+  let shown = 24;
+
+  const num = (v: FormDataEntryValue | null) => { const n = parseFloat(String(v || "").replace(",", ".")); return isFinite(n) && n > 0 ? n : 0; };
+  const fr = (n: number, d = 0) => n.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+
+  function state() {
+    const fd = new FormData(form);
+    return {
+      mode: String(fd.get("mode") || "libre"), w: num(fd.get("w")), h: num(fd.get("h")), d: num(fd.get("d")),
+      t: String(fd.get("t") || ""), v: num(fd.get("v")), s: String(fd.get("s") || "score"),
+      nf: fd.get("nf") === "on", quiet: fd.get("quiet") === "on", tight: fd.get("tight") === "on",
+    };
+  }
+
+  function render() {
+    const st = state();
+    document.querySelectorAll<HTMLElement>(".libre-only").forEach((el) => (el.hidden = st.mode !== "libre"));
+    hint.textContent = st.mode === "libre"
+      ? (st.tight ? "Sans marge : l'appareil peut mesurer exactement vos cotes." : "Pose libre : nous gardons 2 cm de jeu en largeur et en hauteur, et 5 cm derrière l'appareil si vous indiquez une profondeur.")
+      : "Encastrable : l'appareil doit être plus petit que la niche, et pas plus de 6 cm moins haut (sinon il ne correspond pas à ce standard de niche).";
+    try { localStorage.setItem(KEY, JSON.stringify(st)); } catch {}
+    const params = new URLSearchParams();
+    for (const [k, v] of Object.entries(st)) if (v && v !== "score" && !(k === "mode" && v === "libre")) params.set(k, String(v === true ? 1 : v));
+    history.replaceState(null, "", params.toString() ? "?" + params : location.pathname);
+
+    if (!st.w && !st.h) { count.textContent = "Entrez au moins une largeur ou une hauteur"; list.innerHTML = ""; more.hidden = true; return; }
+    const m = st.mode === "libre" && !st.tight ? 2 : 0;
+    const res = rows.filter((r) => {
+      const [, , type, w, h, d, vol, , , noise, , builtIn, nf] = r;
+      if (st.mode === "libre" && builtIn) return false;
+      if (st.mode === "encastrable" && !builtIn) return false;
+      if (st.t && type !== st.t) return false;
+      if (st.v && vol < st.v) return false;
+      if (st.nf && !nf) return false;
+      if (st.quiet && noise > 35) return false;
+      if (st.mode === "libre") {
+        if (st.w && w + m > st.w) return false;
+        if (st.h && h + m > st.h) return false;
+        if (st.d && d + (st.tight ? 0 : 5) > st.d) return false;
+      } else {
+        if (st.w && w > st.w - 0.5) return false;
+        if (st.h && (h > st.h || h < st.h - 6)) return false;
+        if (st.d && d > st.d) return false;
+      }
+      return true;
+    });
+    const sorters: Record<string, (a: Row, b: Row) => number> = {
+      score: (a, b) => b[10] - a[10], kwh: (a, b) => a[8] - b[8], noise: (a, b) => a[9] - b[9] || b[10] - a[10], vol: (a, b) => b[6] - a[6],
+    };
+    res.sort(sorters[st.s] || sorters.score);
+    count.textContent = res.length ? `${res.length} réfrigérateur${res.length > 1 ? "s rentrent" : " rentre"} dans cet espace` : "Aucun modèle ne rentre : essayez sans filtre ou vérifiez vos mesures";
+    list.innerHTML = res.slice(0, shown).map((r) => {
+      const [id, name, type, w, h, d, vol, cls, kwh, noise, score, , nf] = r;
+      const spare = st.mode === "libre" && st.w ? `<span class="pill green">${fr(st.w - w, 1)} cm de marge en largeur</span>` : "";
+      return `<article class="pcard">
+        <div class="row"><span class="pill">${TYPE_LABELS[type] || type}</span><span class="score"><b>${fr(score, 1)}</b><small>/10</small></span></div>
+        <h3><a href="/avis/${id}/">${esc(name)}</a></h3>
+        <div class="dims">${fr(w, 1)} × ${fr(h, 1)} × ${fr(d, 1)} cm · ${vol} L</div>
+        <div class="meta"><span class="energy energy-${cls}">${cls}</span><span class="pill">${kwh} kWh/an</span><span class="pill">${noise} dB</span>${nf ? '<span class="pill green">No Frost</span>' : ""}${spare}</div>
+        <button class="btn ghost small sel" type="button" data-sel-toggle="${id}" aria-pressed="false">☆ Ajouter à ma sélection</button>
+      </article>`;
+    }).join("");
+    more.hidden = res.length <= shown;
+    document.dispatchEvent(new CustomEvent("selection:change"));
+  }
+
+  function restore() {
+    const q = new URLSearchParams(location.search);
+    let saved: Record<string, any> = {};
+    try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch {}
+    const src = q.toString() ? Object.fromEntries(q) : saved;
+    for (const [k, v] of Object.entries(src)) {
+      const el = form.elements.namedItem(k);
+      if (!el) continue;
+      if (el instanceof RadioNodeList) el.value = String(v);
+      else if ((el as HTMLInputElement).type === "checkbox") (el as HTMLInputElement).checked = v === true || v === "1";
+      else if (v) (el as HTMLInputElement).value = String(v);
+    }
+  }
+
+  restore();
+  form.addEventListener("input", () => { shown = 24; render(); });
+  document.getElementById("moreBtn")!.addEventListener("click", () => { shown += 24; render(); });
+  fetch("/data/niche.json").then((r) => r.json()).then((d: Row[]) => { rows = d; render(); });
+</script>
+
+<style>
+  .calc { margin-top: -30px; position: relative; }
+  .mode { border: 0; padding: 0; margin: 0 0 16px; display: flex; flex-wrap: wrap; gap: 18px; }
+  .mode label, .opts label { font-weight: 500; display: inline-flex; gap: 8px; align-items: center; }
+  .mode input, .opts input { width: auto; }
+  .fields { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+  .opts { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 16px; }
+  .hint { margin: 12px 0 0; }
+  #out { margin-top: 10px; }
+</style>

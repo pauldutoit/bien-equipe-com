@@ -1,0 +1,454 @@
+{
+ "updated": "2026-10-05",
+ "totalEprel": 56491,
+ "liveFridges": 35650,
+ "catalog": 704,
+ "classShare": {
+  "A": 380,
+  "B": 323,
+  "C": 2258,
+  "D": 5105,
+  "E": 19812,
+  "F": 7645,
+  "G": 127
+ },
+ "classShareCatalog": {
+  "A": 23,
+  "B": 13,
+  "C": 49,
+  "D": 171,
+  "E": 435,
+  "F": 12,
+  "G": 1
+ },
+ "medianKwhByClass": {
+  "A": 112,
+  "B": 133,
+  "C": 162,
+  "D": 186,
+  "E": 217,
+  "F": 253,
+  "G": 355
+ },
+ "medianNoise": 39,
+ "noFrostShare": 44,
+ "byType": {
+  "combine": {
+   "count": 235,
+   "medianKwh": 212,
+   "medianNoise": 36,
+   "medianVolume": 343,
+   "medianWidth": 59.5,
+   "medianHeight": 186,
+   "medianDepth": 66.5
+  },
+  "deux-portes": {
+   "count": 59,
+   "medianKwh": 189,
+   "medianNoise": 39,
+   "medianVolume": 300,
+   "medianWidth": 59,
+   "medianHeight": 172,
+   "medianDepth": 59.5
+  },
+  "une-porte": {
+   "count": 59,
+   "medianKwh": 115,
+   "medianNoise": 39,
+   "medianVolume": 252,
+   "medianWidth": 55,
+   "medianHeight": 145.7,
+   "medianDepth": 59
+  },
+  "americain": {
+   "count": 148,
+   "medianKwh": 312,
+   "medianNoise": 37,
+   "medianVolume": 572,
+   "medianWidth": 90.8,
+   "medianHeight": 179,
+   "medianDepth": 72.5
+  },
+  "multiportes": {
+   "count": 13,
+   "medianKwh": 295,
+   "medianNoise": 37,
+   "medianVolume": 464,
+   "medianWidth": 70.4,
+   "medianHeight": 185.3,
+   "medianDepth": 68.5
+  },
+  "table-top": {
+   "count": 47,
+   "medianKwh": 89,
+   "medianNoise": 39,
+   "medianVolume": 91,
+   "medianWidth": 48,
+   "medianHeight": 83.5,
+   "medianDepth": 53
+  },
+  "encastrable": {
+   "count": 117,
+   "medianKwh": 180,
+   "medianNoise": 35,
+   "medianVolume": 268,
+   "medianWidth": 54,
+   "medianHeight": 177.2,
+   "medianDepth": 54.8
+  },
+  "sous-plan": {
+   "count": 26,
+   "medianKwh": 115,
+   "medianNoise": 35,
+   "medianVolume": 126,
+   "medianWidth": 54.8,
+   "medianHeight": 86.6,
+   "medianDepth": 54.8
+  }
+ },
+ "byBrand": [
+  {
+   "brand": "LG",
+   "count": 97,
+   "medianScore": 6.3,
+   "medianKwh": 253,
+   "medianNoise": 35
+  },
+  {
+   "brand": "Bosch",
+   "count": 67,
+   "medianScore": 6,
+   "medianKwh": 165,
+   "medianNoise": 35
+  },
+  {
+   "brand": "Haier",
+   "count": 61,
+   "medianScore": 6.6,
+   "medianKwh": 271,
+   "medianNoise": 35
+  },
+  {
+   "brand": "Beko",
+   "count": 59,
+   "medianScore": 5.6,
+   "medianKwh": 206,
+   "medianNoise": 36
+  },
+  {
+   "brand": "Hisense",
+   "count": 56,
+   "medianScore": 6.2,
+   "medianKwh": 243,
+   "medianNoise": 37
+  },
+  {
+   "brand": "Samsung",
+   "count": 50,
+   "medianScore": 6.4,
+   "medianKwh": 254,
+   "medianNoise": 35
+  },
+  {
+   "brand": "Candy",
+   "count": 41,
+   "medianScore": 5.2,
+   "medianKwh": 194,
+   "medianNoise": 39
+  },
+  {
+   "brand": "Frigelux",
+   "count": 34,
+   "medianScore": 4.8,
+   "medianKwh": 137,
+   "medianNoise": 39
+  },
+  {
+   "brand": "Continental Edison",
+   "count": 26,
+   "medianScore": 5.9,
+   "medianKwh": 216,
+   "medianNoise": 39
+  },
+  {
+   "brand": "Siemens",
+   "count": 20,
+   "medianScore": 5.8,
+   "medianKwh": 159,
+   "medianNoise": 35
+  },
+  {
+   "brand": "Schneider",
+   "count": 19,
+   "medianScore": 5.5,
+   "medianKwh": 205,
+   "medianNoise": 39
+  },
+  {
+   "brand": "TCL",
+   "count": 18,
+   "medianScore": 6.6,
+   "medianKwh": 254,
+   "medianNoise": 39
+  },
+  {
+   "brand": "Fagor",
+   "count": 16,
+   "medianScore": 5.4,
+   "medianKwh": 158,
+   "medianNoise": 39
+  },
+  {
+   "brand": "Smeg",
+   "count": 16,
+   "medianScore": 5.3,
+   "medianKwh": 130,
+   "medianNoise": 36
+  },
+  {
+   "brand": "FAR",
+   "count": 14,
+   "medianScore": 5.2,
+   "medianKwh": 136,
+   "medianNoise": 40
+  },
+  {
+   "brand": "Electrolux",
+   "count": 14,
+   "medianScore": 5.7,
+   "medianKwh": 165,
+   "medianNoise": 36
+  },
+  {
+   "brand": "Signature",
+   "count": 10,
+   "medianScore": 5.9,
+   "medianKwh": 236,
+   "medianNoise": 40
+  },
+  {
+   "brand": "Neff",
+   "count": 7,
+   "medianScore": 6,
+   "medianKwh": 184,
+   "medianNoise": 35
+  },
+  {
+   "brand": "Linarie",
+   "count": 7,
+   "medianScore": 4.5,
+   "medianKwh": 186,
+   "medianNoise": 40
+  },
+  {
+   "brand": "TELEFUNKEN",
+   "count": 6,
+   "medianScore": 5,
+   "medianKwh": 174,
+   "medianNoise": 40
+  },
+  {
+   "brand": "Midea",
+   "count": 5,
+   "medianScore": 6.5,
+   "medianKwh": 256,
+   "medianNoise": 35
+  },
+  {
+   "brand": "Whirlpool",
+   "count": 5,
+   "medianScore": 6.6,
+   "medianKwh": 181,
+   "medianNoise": 33
+  },
+  {
+   "brand": "Brandt",
+   "count": 5,
+   "medianScore": 5.1,
+   "medianKwh": 146,
+   "medianNoise": 37
+  },
+  {
+   "brand": "Amica",
+   "count": 5,
+   "medianScore": 4.4,
+   "medianKwh": 176,
+   "medianNoise": 40
+  },
+  {
+   "brand": "Vedette",
+   "count": 4,
+   "medianScore": 5.8,
+   "medianKwh": 179,
+   "medianNoise": 39
+  },
+  {
+   "brand": "SABA",
+   "count": 3,
+   "medianScore": 5.5,
+   "medianKwh": 216,
+   "medianNoise": 39
+  },
+  {
+   "brand": "Asko",
+   "count": 3,
+   "medianScore": 6.7,
+   "medianKwh": 164.98,
+   "medianNoise": 36
+  },
+  {
+   "brand": "Indesit",
+   "count": 3,
+   "medianScore": 6,
+   "medianKwh": 227,
+   "medianNoise": 36
+  },
+  {
+   "brand": "GLEMGAS",
+   "count": 3,
+   "medianScore": 5.3,
+   "medianKwh": 142,
+   "medianNoise": 39
+  },
+  {
+   "brand": "Oceanic",
+   "count": 3,
+   "medianScore": 4.8,
+   "medianKwh": 168,
+   "medianNoise": 40
+  },
+  {
+   "brand": "Hoover",
+   "count": 2,
+   "medianScore": 5.9,
+   "medianKwh": 279,
+   "medianNoise": 38
+  },
+  {
+   "brand": "SIDEME",
+   "count": 2,
+   "medianScore": 5.9,
+   "medianKwh": 125,
+   "medianNoise": 39
+  },
+  {
+   "brand": "Gorenje",
+   "count": 2,
+   "medianScore": 5.8,
+   "medianKwh": 245.83,
+   "medianNoise": 39
+  },
+  {
+   "brand": "Sharp",
+   "count": 2,
+   "medianScore": 5.6,
+   "medianKwh": 142,
+   "medianNoise": 39
+  },
+  {
+   "brand": "CLIMADIFF",
+   "count": 2,
+   "medianScore": 5.2,
+   "medianKwh": 76,
+   "medianNoise": 22
+  },
+  {
+   "brand": "AIRLUX",
+   "count": 2,
+   "medianScore": 5.2,
+   "medianKwh": 217,
+   "medianNoise": 38
+  },
+  {
+   "brand": "AYA",
+   "count": 2,
+   "medianScore": 4.8,
+   "medianKwh": 170,
+   "medianNoise": 40
+  },
+  {
+   "brand": "HKOENIG",
+   "count": 2,
+   "medianScore": 4.2,
+   "medianKwh": 80,
+   "medianNoise": 39
+  },
+  {
+   "brand": "HOTPOINT/ARISTON",
+   "count": 1,
+   "medianScore": 6.7,
+   "medianKwh": 113,
+   "medianNoise": 30
+  },
+  {
+   "brand": "PURELECT",
+   "count": 1,
+   "medianScore": 6,
+   "medianKwh": 321,
+   "medianNoise": 37
+  },
+  {
+   "brand": "De Dietrich",
+   "count": 1,
+   "medianScore": 5.8,
+   "medianKwh": 100,
+   "medianNoise": 37
+  },
+  {
+   "brand": "Rosières",
+   "count": 1,
+   "medianScore": 5.7,
+   "medianKwh": 114,
+   "medianNoise": 39
+  },
+  {
+   "brand": "Daewoo",
+   "count": 1,
+   "medianScore": 5.5,
+   "medianKwh": 142,
+   "medianNoise": 38
+  },
+  {
+   "brand": "Sevenstars",
+   "count": 1,
+   "medianScore": 5.1,
+   "medianKwh": 136,
+   "medianNoise": 40
+  },
+  {
+   "brand": "KONO STEEL GMBH",
+   "count": 1,
+   "medianScore": 4.8,
+   "medianKwh": 172,
+   "medianNoise": 45
+  },
+  {
+   "brand": "Comfee",
+   "count": 1,
+   "medianScore": 4.4,
+   "medianKwh": 176,
+   "medianNoise": 40
+  },
+  {
+   "brand": "ASPES",
+   "count": 1,
+   "medianScore": 4.4,
+   "medianKwh": 209,
+   "medianNoise": 40
+  },
+  {
+   "brand": "Helvetia",
+   "count": 1,
+   "medianScore": 4,
+   "medianKwh": 137,
+   "medianNoise": 38
+  },
+  {
+   "brand": "LES PETITS CHAMPS",
+   "count": 1,
+   "medianScore": 3.7,
+   "medianKwh": 146,
+   "medianNoise": 26
+  }
+ ]
+}
