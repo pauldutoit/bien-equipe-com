@@ -1,5 +1,5 @@
 ---
-title: "Classe énergétique d'un réfrigérateur : ce que vaut vraiment la lettre"
+title: "Classe énergétique d'un frigo : ce que vaut la lettre"
 h1: "Classe énergétique d'un réfrigérateur : A, D ou E, quelle différence sur la facture ?"
 description: "Depuis 2021, la plupart des réfrigérateurs sont classés E. Ce que la lettre mesure, ce qu'elle ne dit pas, et ce que chaque classe coûte vraiment par an."
 rubrique: "Consommation"

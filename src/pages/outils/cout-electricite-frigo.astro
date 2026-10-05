@@ -6,7 +6,7 @@ import { fmt } from "../../lib/catalog";
 const p = site.electricity.price;
 const classes = Object.entries(market.medianKwhByClass).filter(([, v]) => v);
 ---
-<BaseLayout title="Combien consomme un réfrigérateur ? Calculez son coût par an" description={`Calculez le coût annuel d'un réfrigérateur à partir de sa consommation en kWh. Prix de l'électricité : ${fmt(p, 4)} €/kWh (${site.electricity.label}).`} crumbs={[{ label: "Outils" }, { label: "Coût d'électricité d'un frigo" }]}>
+<BaseLayout title="Coût d'électricité d'un frigo : le calculateur" description={`Calculez le coût annuel d'un réfrigérateur à partir de sa consommation en kWh, au tarif réglementé (${fmt(p, 4)} €/kWh) ou au vôtre.`} crumbs={[{ label: "Outils" }, { label: "Coût d'électricité d'un frigo" }]}>
   <div class="wrap prose" style="padding-top:18px">
     <h1>Combien coûte un réfrigérateur en électricité ?</h1>
     <p>La consommation annuelle (en kWh) figure sur l'étiquette énergie de chaque appareil. Multipliez-la par le prix du kWh : c'est le coût de fonctionnement sur un an, dans les conditions normalisées du test.</p>

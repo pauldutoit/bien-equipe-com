@@ -10,11 +10,12 @@ const types = [...new Set(b.items.map((f) => f.typeLabel.replace("Réfrigérateu
 const better = b.items.filter((f) => f.scores.global > typeStats[f.type].global).length;
 ---
 <RankingPage
-  title={`Réfrigérateur ${b.name} : avis et classement des ${b.items.length} modèles (${YEAR})`}
-  description={`Quel réfrigérateur ${b.name} choisir ? ${b.items.length} modèles vendus en France comparés sur leur consommation, leur bruit et leur volume, d'après les données officielles.`}
+  title={`Réfrigérateur ${b.name} : avis sur ${b.items.length} modèles (${YEAR})`}
+  description={`Quel réfrigérateur ${b.name} choisir ? ${b.items.length} modèles vendus en France comparés sur leur consommation, leur bruit et leur volume (données officielles).`}
   h1={`Réfrigérateur ${b.name} : lequel choisir ?`}
   intro={`${b.items.length} réfrigérateurs ${b.name} vendus en France (${types.join(", ").toLowerCase()}). Note médiane : ${fmt(med, 1)}/10. ${better} modèle${better > 1 ? "s font" : " fait"} mieux que la médiane de leur catégorie.`}
   items={b.items}
   crumbs={[{ label: "Marques", href: "/marques/" }, { label: b.name }]}
   showFacets={false}
+  listAll
 />

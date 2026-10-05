@@ -10,10 +10,12 @@ interface Props {
   indexable?: boolean;
   crumbs?: Crumb[];
   ogType?: string;
+  ogImage?: string;
 }
-const { title, description, indexable = true, crumbs = [], ogType = "website" } = Astro.props;
+const { title, description, indexable = true, crumbs = [], ogType = "website", ogImage = "/og-default.jpg" } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
-const fullTitle = title.includes(site.siteName) ? title : `${title} | ${site.siteName}`;
+// Suffixe de marque seulement si le titre reste sous ~65 caractères (sinon Google le tronque).
+const fullTitle = title.includes(site.siteName) || title.length > 50 ? title : `${title} | ${site.siteName}`;
 const path = Astro.url.pathname;
 const nav = [
   { href: "/refrigerateur/", label: "Réfrigérateurs" },
@@ -51,6 +53,11 @@ const breadcrumbLd = crumbs.length
     <meta property="og:url" content={canonical} />
     <meta property="og:site_name" content={site.siteName} />
     <meta property="og:locale" content="fr_FR" />
+    <meta property="og:image" content={new URL(ogImage, Astro.site).href} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${site.siteName} : réfrigérateurs comparés sur données officielles`} />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet" />

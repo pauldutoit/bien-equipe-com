@@ -5,8 +5,8 @@ const items = [...fridges].sort(sortDefault);
 const types = FACETS.filter((f) => f.group === "Type").map((fc) => ({ fc, n: facetItems(fc).length }));
 ---
 <RankingPage
-  title={`Meilleur réfrigérateur ${YEAR} : ${items.length} modèles notés sur données officielles`}
-  description={`Classement de ${items.length} réfrigérateurs vendus en France, notés sur leur consommation, leur bruit, leur volume utile et leurs équipements, d'après la base officielle EPREL.`}
+  title={`Meilleur réfrigérateur ${YEAR} : ${items.length} modèles notés`}
+  description={`Classement de ${items.length} réfrigérateurs vendus en France, notés sur leur consommation, leur bruit, leur volume et leurs équipements (données EPREL).`}
   h1={`Meilleur réfrigérateur ${YEAR} : notre classement`}
   intro={`Nous avons noté ${items.length} réfrigérateurs vendus en France avec la même règle pour tous, à partir des données que chaque fabricant doit déclarer pour l'étiquette énergie : consommation, bruit, volumes, dimensions. Commencez par le format qui rentre chez vous.`}
   items={items}

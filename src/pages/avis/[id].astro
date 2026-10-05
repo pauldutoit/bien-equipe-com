@@ -7,6 +7,7 @@ import Offers from "../../components/Offers.astro";
 import ProductCard from "../../components/ProductCard.astro";
 import Silhouettes from "../../components/Silhouettes.astro";
 import EnergyLabel from "../../components/EnergyLabel.astro";
+import { indexableFiches } from "../../lib/indexation";
 import site from "../../data/site.config.json";
 import {
   type Fridge, fridges, FACETS, typeStats, TYPE_PLURAL, rivals, duelSlug, duelSet, brandSlug,
@@ -20,7 +21,7 @@ const { f } = Astro.props as { f: Fridge };
 const avisAll = await getCollection("avis");
 const avis = avisAll.find((a) => a.id === f.id);
 const Avis = avis ? (await render(avis)).Content : null;
-const indexable = !!avis && avis.data.indexable;
+const indexable = (await indexableFiches()).has(f.id);
 
 const st = typeStats[f.type];
 const plural = TYPE_PLURAL[f.type];
@@ -64,8 +65,12 @@ if (f.freezerVolume >= 100) pourQui.push("Ceux qui congèlent beaucoup (batch co
 if (!f.noFrost && f.freezerVolume > 0) pasPourQui.push("Ceux qui ne veulent jamais dégivrer");
 
 const eprelUrl = `https://eprel.ec.europa.eu/screen/product/refrigeratingappliances2019/${f.eprel}`;
-const title = `Avis ${f.name} : ${f.typeLabel.toLowerCase()} ${f.totalVolume} L, note ${fmt(f.scores.global, 1)}/10`;
-const description = `${f.name} : ${dims(f)}, ${f.totalVolume} L, classe ${f.energyClass}, ${f.kwh} kWh/an (${euros(cost)}/an), ${f.noise} dB. Notre analyse sur données officielles et les modèles concurrents.`;
+// Titres sous ~65 caractères : version longue si elle tient, sinon version courte.
+const shortType = f.typeLabel.replace("Réfrigérateur ", "");
+const titleLong = `Avis ${f.name} : ${shortType} ${f.totalVolume} L, note ${fmt(f.scores.global, 1)}/10`;
+const title = titleLong.length <= 65 ? titleLong : `Avis ${f.name} : note ${fmt(f.scores.global, 1)}/10`;
+const descBase = `${f.name} : ${dims(f)}, ${f.totalVolume} L, classe ${f.energyClass}, ${f.kwh} kWh/an (${euros(cost)}/an), ${f.noise} dB.`;
+const description = descBase.length <= 120 ? `${descBase} Notre analyse sur données officielles.` : descBase;
 const faq = [
   { q: `Quelles sont les dimensions du ${f.name} ?`, a: `${fmt(f.width, 1)} cm de large, ${fmt(f.height, 1)} cm de haut et ${fmt(f.depth, 1)} cm de profondeur (données déclarées par le fabricant dans la base EPREL). ${f.design === "BUILT_IN" ? "C'est un modèle encastrable : ce sont les dimensions de l'appareil, la niche doit être un peu plus grande (voir la notice de montage)." : "Prévoyez quelques centimètres de jeu sur les côtés et au-dessus, et l'écart arrière indiqué par la notice pour la ventilation."}` },
   { q: `Combien consomme le ${f.name} par an ?`, a: `${f.kwh} kWh par an selon l'étiquette énergie, soit environ ${euros(cost)} par an au ${site.electricity.label.replace("Tarif", "tarif")} (${fmt(site.electricity.price, 4)} €/kWh). La médiane des ${plural} de notre catalogue est de ${st.kwh} kWh/an.` },
@@ -159,6 +164,7 @@ const ld = {
               : ` Pour un modèle en pose libre, comptez un emplacement d'au moins ${fmt(f.width + 2)} cm de large et ${fmt(f.height + 2)} cm de haut, et laissez de l'air derrière pour que le condenseur évacue la chaleur.`}
           </p>
           <Silhouettes items={silItems} />
+          <p class="small">Comment bien mesurer, et quelles marges laisser : <a href="/guides/dimensions-refrigerateur/">notre guide des dimensions d'un réfrigérateur</a>.</p>
           <p class="small muted">Silhouettes de face à la même échelle, avec deux concurrents directs et une personne de 1,70 m. <a href="/outils/quel-frigo-rentre/">Vérifier avec vos propres mesures →</a></p>
         </section>
 
@@ -170,6 +176,7 @@ const ld = {
             <div class="card stat"><span class="muted small">Écart avec la médiane</span><b>{cost - costMedian > 0 ? "+" : ""}{euros((cost - costMedian) * 10)}</b><span class="small">sur 10 ans</span></div>
           </div>
           <p class="small muted">Calcul : consommation de l'étiquette énergie × {fmt(site.electricity.price, 4)} €/kWh ({site.electricity.label}). La consommation réelle dépend de la pièce, du réglage et des ouvertures de porte.</p>
+          <p class="small">Ce que vaut vraiment la lettre de l'étiquette : <a href="/guides/classe-energetique-refrigerateur/">notre guide de la classe énergétique</a>. Comparer avec un autre modèle : <a href="/outils/cout-electricite-frigo/">le calculateur de coût</a>. Où se situe ce modèle face au marché : <a href="/etat-du-marche/">l'état du marché</a>.</p>
         </section>
 
         <section>

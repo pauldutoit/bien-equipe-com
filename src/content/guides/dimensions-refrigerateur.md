@@ -1,5 +1,5 @@
 ---
-title: "Dimensions d'un réfrigérateur : les tailles standard, format par format"
+title: "Dimensions d'un réfrigérateur : les tailles standard"
 h1: "Quelles dimensions pour un réfrigérateur ?"
 description: "Largeur, hauteur, profondeur : les dimensions réelles des réfrigérateurs vendus en France, mesurées sur 704 modèles, et comment mesurer votre emplacement."
 rubrique: "Bien choisir"

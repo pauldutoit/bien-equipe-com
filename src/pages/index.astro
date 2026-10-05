@@ -3,7 +3,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import ProductCard from "../components/ProductCard.astro";
 import market from "../data/market.json";
 import site from "../data/site.config.json";
+import { getCollection } from "astro:content";
 import { fridges, FACETS, facetItems, duels, duelSlug, brands, fmt, sortDefault, YEAR } from "../lib/catalog";
+const guides = (await getCollection("guides")).filter((g) => !g.data.draft);
 
 const types = FACETS.filter((f) => f.group === "Type").map((fc) => ({ fc, n: facetItems(fc).length, best: facetItems(fc)[0] }));
 const criteres = FACETS.filter((f) => f.group !== "Type");
@@ -19,7 +21,7 @@ const ld = {
   ],
 };
 ---
-<BaseLayout title={`Bien Équipé : quel réfrigérateur choisir en ${YEAR} ?`} description={`${fridges.length} réfrigérateurs vendus en France notés sur leurs données officielles (consommation, bruit, volume, dimensions). Calculateur de dimensions, duels et classements sans emplacement payé.`}>
+<BaseLayout title={`Bien Équipé : quel réfrigérateur choisir en ${YEAR} ?`} description={`${fridges.length} réfrigérateurs vendus en France notés sur leurs données officielles : consommation, bruit, volume, dimensions. Sans emplacement payé.`}>
   <script type="application/ld+json" slot="head" set:html={JSON.stringify(ld)} />
   <section class="hero home-hero">
     <div class="wrap hero-grid">
@@ -94,6 +96,19 @@ const ld = {
         <p class="muted">Sur {fmt(market.liveFridges)} réfrigérateurs déclarés en Europe. Les classes A et B restent rares : voilà pourquoi la consommation en kWh/an compte plus que la lettre.</p>
         <a class="btn ghost" href="/etat-du-marche/">Voir l'observatoire</a>
       </div>
+    </section>
+
+    <section>
+      <h2>Nos guides pour bien choisir</h2>
+      <div class="grid grid-3">
+        {guides.map((g) => (
+          <a class="card tile" href={`/guides/${g.id}/`}>
+            <h3>{g.data.h1}</h3>
+            <p class="small muted">{g.data.description}</p>
+          </a>
+        ))}
+      </div>
+      <p style="margin-top:12px"><a href="/guides/">Tous les guides →</a> · <a href="/outils/cout-electricite-frigo/">Calculer le coût d'électricité d'un frigo →</a></p>
     </section>
 
     <section>

@@ -2,13 +2,15 @@ import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
 import site from "../data/site.config.json";
 import { FACETS, facetItems, brands, duels, duelSlug, MIN_INDEX } from "../lib/catalog";
+import { indexableFiches } from "../lib/indexation";
 
 // Le sitemap ne liste QUE les pages indexables (mêmes règles que les balises robots).
 export const GET: APIRoute = async ({ site: s }) => {
   const base = (s?.toString() ?? `https://${site.domain}/`).replace(/\/$/, "");
   const lastmod = site.dataUpdated;
-  const avis = (await getCollection("avis")).filter((a) => a.data.indexable);
-  const avisIds = new Set(avis.map((a) => a.id));
+  const avis = await getCollection("avis");
+  const avisDate = new Map(avis.map((a) => [a.id, a.data.updated.toISOString().slice(0, 10)]));
+  const fiches = await indexableFiches();
   const guides = (await getCollection("guides")).filter((g) => !g.data.draft);
 
   const urls: { loc: string; lastmod?: string }[] = [
@@ -18,8 +20,8 @@ export const GET: APIRoute = async ({ site: s }) => {
   ].map((p) => ({ loc: p, lastmod }));
   for (const fc of FACETS) if (facetItems(fc).length >= MIN_INDEX) urls.push({ loc: `/refrigerateur/${fc.slug}/`, lastmod });
   for (const b of brands) if (b.items.length >= MIN_INDEX) urls.push({ loc: `/marques/${b.slug}/`, lastmod });
-  for (const a of avis) urls.push({ loc: `/avis/${a.id}/`, lastmod: a.data.updated.toISOString().slice(0, 10) });
-  for (const [a, b] of duels()) if (avisIds.has(a.id) && avisIds.has(b.id)) urls.push({ loc: `/comparatif/${duelSlug(a, b)}/`, lastmod });
+  for (const id of fiches) urls.push({ loc: `/avis/${id}/`, lastmod: avisDate.get(id) ?? lastmod });
+  for (const [a, b] of duels()) if (fiches.has(a.id) && fiches.has(b.id)) urls.push({ loc: `/comparatif/${duelSlug(a, b)}/`, lastmod });
   for (const g of guides) urls.push({ loc: `/guides/${g.id}/`, lastmod: (g.data.updated ?? g.data.publishDate).toISOString().slice(0, 10) });
 
   const body =

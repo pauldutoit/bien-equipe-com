@@ -12,7 +12,7 @@ const updated = new Date(market.updated).toLocaleDateString("fr-FR", { day: "num
 const eShare = share("E");
 const abShare = Math.round((share("A") + share("B")) * 10) / 10;
 ---
-<BaseLayout title="État du marché des réfrigérateurs : les chiffres officiels" description={`Classes énergétiques, consommation, bruit : ce que disent les ${fmt(market.liveFridges)} fiches officielles des réfrigérateurs en vente en Europe. Mis à jour le ${updated}.`} crumbs={[{ label: "État du marché" }]}>
+<BaseLayout title="État du marché des réfrigérateurs : les chiffres" description={`Classes énergétiques, consommation, bruit : ce que disent les ${fmt(market.liveFridges)} fiches officielles des réfrigérateurs en vente en Europe. Mis à jour le ${updated}.`} crumbs={[{ label: "État du marché" }]}>
   <div class="wrap" style="padding-top:18px">
     <p class="eyebrow">Observatoire · mis à jour le {updated}</p>
     <h1>État du marché des réfrigérateurs</h1>

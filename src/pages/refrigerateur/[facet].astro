@@ -1,6 +1,6 @@
 ---
 import RankingPage from "../../components/RankingPage.astro";
-import { FACETS, type Facet, facetItems } from "../../lib/catalog";
+import { FACETS, type Facet, facetItems, YEAR } from "../../lib/catalog";
 export function getStaticPaths() {
   return FACETS.map((fc) => ({ params: { facet: fc.slug }, props: { slug: fc.slug } }));
 }
@@ -9,7 +9,7 @@ const items = facetItems(fc);
 ---
 <RankingPage
   title={fc.title}
-  description={`${fc.intro.split(". ")[0]}. ${items.length} modèles comparés sur données officielles : consommation, bruit, volume, dimensions.`}
+  description={`${fc.h1.replace(` ${YEAR}`, "")} : ${items.length} modèles vendus en France, comparés sur leur consommation, leur bruit et leur volume.`}
   h1={fc.h1}
   intro={fc.intro}
   items={items}

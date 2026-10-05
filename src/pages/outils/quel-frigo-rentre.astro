@@ -11,7 +11,7 @@ const faq = [
 ];
 const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map((x) => ({ "@type": "Question", name: x.q, acceptedAnswer: { "@type": "Answer", text: x.a } })) };
 ---
-<BaseLayout title="Quel réfrigérateur rentre chez moi ? Le calculateur de dimensions" description={`Entrez la largeur, la hauteur et la profondeur de l'emplacement : le calculateur affiche les ${fridges.length} réfrigérateurs qui rentrent, classés par note, avec leur consommation.`} crumbs={[{ label: "Outils" }, { label: "Calculateur de dimensions" }]}>
+<BaseLayout title="Quel frigo rentre chez moi ? Calculateur de dimensions" description={`Entrez la largeur, la hauteur et la profondeur disponibles : le calculateur affiche, parmi ${fridges.length} modèles, les réfrigérateurs qui rentrent.`} crumbs={[{ label: "Outils" }, { label: "Calculateur de dimensions" }]}>
   <script type="application/ld+json" slot="head" set:html={JSON.stringify(ld)} />
   <section class="hero">
     <div class="wrap">

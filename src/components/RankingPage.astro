@@ -1,5 +1,6 @@
 ---
 // Gabarit commun des pages classement (/refrigerateur/, facettes, marques).
+import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import ProductCard from "./ProductCard.astro";
 import Energy from "./Energy.astro";
@@ -10,12 +11,13 @@ import { type Fridge, FACETS, fmt, euros, yearlyCost, median, dims, MIN_INDEX, Y
 interface Props {
   title: string; description: string; h1: string; intro: string;
   items: Fridge[]; crumbs: { label: string; href?: string }[];
-  current?: string; showFacets?: boolean;
+  current?: string; showFacets?: boolean; listAll?: boolean;
 }
-const { title, description, h1, intro, items, crumbs, current, showFacets = true } = Astro.props;
+const { title, description, h1, intro, items, crumbs, current, showFacets = true, listAll = false } = Astro.props;
+const guides = (await getCollection("guides")).filter((g) => !g.data.draft);
 const indexable = items.length >= MIN_INDEX;
 const top3 = items.slice(0, 3);
-const listed = items.slice(0, 30);
+const listed = listAll ? items : items.slice(0, 30);
 const stats = {
   count: items.length,
   kwh: median(items.map((f) => f.kwh)),
@@ -85,7 +87,7 @@ const itemListLd = {
 
     <section>
       <h2>Notre classement complet</h2>
-      <p class="muted small">Classés par note globale Bien Équipé ({items.length > 30 ? `30 premiers sur ${items.length}` : `${items.length} modèles`}). <a href="/methodologie/">Comment nous notons</a>.</p>
+      <p class="muted small">Classés par note globale Bien Équipé ({listed.length < items.length ? `30 premiers sur ${items.length}` : `${items.length} modèles`}). <a href="/methodologie/">Comment nous notons</a>.</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>#</th><th>Modèle</th><th>Dimensions</th><th class="num">Volume</th><th>Classe</th><th class="num">kWh/an</th><th class="num">dB</th><th class="num">Note</th></tr></thead>
@@ -113,6 +115,19 @@ const itemListLd = {
     </section>
 
     <slot />
+
+    <section>
+      <h2>Nos guides pour bien choisir</h2>
+      <div class="grid grid-3">
+        {guides.map((g) => (
+          <a class="card" href={`/guides/${g.id}/`} style="text-decoration:none;color:inherit">
+            <h3 style="margin-bottom:6px">{g.data.h1}</h3>
+            <p class="small muted" style="margin:0">{g.data.description}</p>
+          </a>
+        ))}
+      </div>
+      <p style="margin-top:14px">Les chiffres de tout le marché, classe par classe et marque par marque : <a href="/etat-du-marche/">l'état du marché des réfrigérateurs</a>. Pour chiffrer la facture d'un modèle : <a href="/outils/cout-electricite-frigo/">le calculateur de coût d'électricité</a>.</p>
+    </section>
 
     {showFacets && (
       <section>

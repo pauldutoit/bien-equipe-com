@@ -4,7 +4,7 @@ import site from "../data/site.config.json";
 const missing = !site.legalName || !site.legalAddress;
 if (missing) console.warn("[mentions-legales] legalName / legalAddress à compléter dans src/data/site.config.json");
 ---
-<BaseLayout title="Mentions légales" description="Mentions légales du site Bien Équipé." crumbs={[{ label: "Mentions légales" }]}>
+<BaseLayout title="Mentions légales" description="Mentions légales du site Bien Équipé." indexable={false} crumbs={[{ label: "Mentions légales" }]}>
   <div class="wrap prose" style="padding-top:18px">
     <h1>Mentions légales</h1>
     <h2>Éditeur</h2>

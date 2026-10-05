@@ -1,5 +1,5 @@
 ---
-import { getCollection } from "astro:content";
+import { indexableFiches } from "../../lib/indexation";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Energy from "../../components/Energy.astro";
 import ScoreBars from "../../components/ScoreBars.astro";
@@ -54,11 +54,13 @@ const rows: [string, (f: Fridge) => any][] = [
   ["Classe climatique", (f) => f.climate.join(", ")],
   ["Garantie déclarée", (f) => (f.guarantee ? `${f.guarantee} mois` : "n. c.")],
 ];
-const title = `${a.name} ou ${b.name} : lequel choisir ?`;
-const description = `Duel ${a.name} contre ${b.name} : dimensions, consommation, bruit, volume et notes comparés sur données officielles. Notre verdict selon votre usage.`;
-// Duel indexable seulement si les deux fiches ont un avis rédigé (gate anti contenu mince).
-const avisIds = new Set((await getCollection("avis")).filter((x) => x.data.indexable).map((x) => x.id));
-const indexable = avisIds.has(a.id) && avisIds.has(b.id);
+const titleLong = `${a.name} ou ${b.name} : lequel choisir ?`;
+const title = titleLong.length <= 65 ? titleLong : `${a.name} ou ${b.name} ?`.length <= 65 ? `${a.name} ou ${b.name} ?` : `${a.brand} ${a.ref} vs ${b.ref}`;
+const descLong = `${a.name} ou ${b.name} ? Dimensions, consommation, bruit et volume comparés sur données officielles, et notre verdict selon votre usage.`;
+const description = descLong.length <= 158 ? descLong : `${a.name} ou ${b.name} ? Dimensions, consommation, bruit et volume comparés, et notre verdict.`;
+// Duel indexable seulement si les deux fiches le sont (gate anti contenu mince).
+const idx = await indexableFiches();
+const indexable = idx.has(a.id) && idx.has(b.id);
 ---
 <BaseLayout {title} {description} {indexable} crumbs={[{ label: "Duels", href: "/comparatif/" }, { label: `${a.ref} vs ${b.ref}` }]}>
   <div class="wrap">
