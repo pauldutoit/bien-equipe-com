@@ -69,7 +69,7 @@ export const FACETS: Facet[] = [
     intro: "Encastré sous le plan de travail, dans une niche d'environ 82 cm de haut.", filter: T("sous-plan") },
 
   { slug: "largeur-55-cm", group: "Largeur", short: "55 cm et moins", h1: "Réfrigérateur de 55 cm de large ou moins", title: `Réfrigérateur étroit (55 cm et moins) : le classement ${YEAR}`,
-    intro: "Pour une cuisine étroite ou une niche de 56 cm, ces modèles laissent de la place pour ouvrir la porte.", filter: (f) => f.width <= 55.5 && f.design !== "BUILT_IN", sort: (a, b) => b.scores.global - a.scores.global },
+    intro: "Pour une cuisine étroite ou un emplacement de 56 cm, ces modèles laissent de la place pour ouvrir la porte.", filter: (f) => f.width <= 55.5 && f.design !== "BUILT_IN", sort: (a, b) => b.scores.global - a.scores.global },
   { slug: "largeur-60-cm", group: "Largeur", short: "60 cm", h1: "Réfrigérateur de 60 cm de large", title: `Réfrigérateur 60 cm de large : les meilleurs modèles ${YEAR}`,
     intro: "La largeur standard des cuisines françaises. Prévoyez 1 à 2 cm de jeu sur les côtés et 5 cm derrière pour la ventilation.", filter: (f) => f.width > 55.5 && f.width <= 61 && f.design !== "BUILT_IN" },
   { slug: "largeur-70-cm", group: "Largeur", short: "70 cm", h1: "Réfrigérateur de 70 cm de large", title: `Réfrigérateur 70 cm de large : plus de volume sans passer à l'américain`,

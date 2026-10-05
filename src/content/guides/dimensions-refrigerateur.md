@@ -43,7 +43,7 @@ La médiane ne dit pas tout. Pour les combinés, 80 % des modèles mesurent **en
 4. **Le jeu de ventilation.** Un réfrigérateur évacue sa chaleur par l'arrière ou le dessus. Coincé, il consomme plus et vieillit plus vite. Comptez environ 1 cm de chaque côté et l'écart arrière indiqué dans la notice.
 5. **L'ouverture de la porte.** Contre un mur côté charnière, une porte qui ne s'ouvre qu'à 90° empêche parfois de sortir les bacs à légumes. Prévoyez si possible 5 à 10 cm.
 
-Notre [calculateur de niche](/outils/quel-frigo-rentre/) applique ces marges automatiquement et affiche la liste des modèles qui rentrent.
+Notre [calculateur de dimensions](/outils/quel-frigo-rentre/) applique ces marges automatiquement et affiche la liste des modèles qui rentrent.
 
 ## Le cas particulier de l'encastrable
 
@@ -61,4 +61,4 @@ Un réfrigérateur américain fait environ 91 cm de large et 72 cm de profondeur
 
 ## Plus grand n'est pas toujours mieux
 
-Deux réfrigérateurs de même encombrement peuvent offrir des volumes très différents : tout dépend de l'épaisseur des parois et de la place prise par le compresseur. Nous mesurons ce rendement (litres utiles divisés par le volume extérieur) dans la note « volume utile » de chaque fiche. Sur la grande majorité des combinés, il va d'environ 43 % à 50 % : sur un appareil de 60 × 186 × 66 cm, cela représente environ 50 litres d'écart dans la même niche.
+Deux réfrigérateurs de même encombrement peuvent offrir des volumes très différents : tout dépend de l'épaisseur des parois et de la place prise par le compresseur. Nous mesurons ce rendement (litres utiles divisés par le volume extérieur) dans la note « volume utile » de chaque fiche. Sur la grande majorité des combinés, il va d'environ 43 % à 50 % : sur un appareil de 60 × 186 × 66 cm, cela représente environ 50 litres d'écart pour le même encombrement.

@@ -11,11 +11,11 @@ const faq = [
 ];
 const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map((x) => ({ "@type": "Question", name: x.q, acceptedAnswer: { "@type": "Answer", text: x.a } })) };
 ---
-<BaseLayout title="Quel réfrigérateur rentre dans ma niche ? Le calculateur" description={`Entrez la largeur, la hauteur et la profondeur de votre niche : le calculateur affiche les ${fridges.length} réfrigérateurs qui rentrent, classés par note, avec leur consommation.`} crumbs={[{ label: "Outils" }, { label: "Calculateur de niche" }]}>
+<BaseLayout title="Quel réfrigérateur rentre chez moi ? Le calculateur de dimensions" description={`Entrez la largeur, la hauteur et la profondeur de l'emplacement : le calculateur affiche les ${fridges.length} réfrigérateurs qui rentrent, classés par note, avec leur consommation.`} crumbs={[{ label: "Outils" }, { label: "Calculateur de dimensions" }]}>
   <script type="application/ld+json" slot="head" set:html={JSON.stringify(ld)} />
   <section class="hero">
     <div class="wrap">
-      <p class="eyebrow" style="color:#ffd23f">Calculateur de niche</p>
+      <p class="eyebrow" style="color:#ffd23f">Calculateur de dimensions</p>
       <h1>Quel réfrigérateur rentre chez vous ?</h1>
       <p>Entrez vos mesures en centimètres. Nous filtrons {fridges.length} modèles vendus en France sur leurs dimensions officielles, marges de ventilation comprises.</p>
     </div>

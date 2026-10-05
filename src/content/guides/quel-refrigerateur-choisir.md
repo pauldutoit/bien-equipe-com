@@ -20,7 +20,7 @@ Choisir un réfrigérateur, c'est répondre à cinq questions **dans le bon ordr
 
 C'est la question qui élimine le plus de modèles. Mesurez la largeur, la hauteur et la profondeur disponibles, en gardant environ 1 cm de jeu sur les côtés et la ventilation à l'arrière. Une cuisine équipée avec une colonne vide ? Il vous faut un encastrable, et c'est la hauteur de niche qui décide.
 
-**Le bon outil :** le [calculateur de niche](/outils/quel-frigo-rentre/) filtre les 704 modèles de notre catalogue sur vos mesures. Le guide [quelles dimensions pour un réfrigérateur](/guides/dimensions-refrigerateur/) détaille la méthode.
+**Le bon outil :** le [calculateur de dimensions](/outils/quel-frigo-rentre/) filtre les 704 modèles de notre catalogue sur vos mesures. Le guide [quelles dimensions pour un réfrigérateur](/guides/dimensions-refrigerateur/) détaille la méthode.
 
 ## 2. Quel format ?
 
