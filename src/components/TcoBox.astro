@@ -1,0 +1,59 @@
+---
+// Coût total de possession : prix d'achat (saisi) + électricité sur N ans.
+import site from "../data/site.config.json";
+import { type Fridge, typeStats, TYPE_PLURAL } from "../lib/catalog";
+const { f } = Astro.props as { f: Fridge };
+const yearly = f.kwh * site.electricity.price;
+const medianYearly = typeStats[f.type].kwh * site.electricity.price;
+---
+<div class="card tco" data-tco data-id={f.id} data-yearly={yearly} data-median-yearly={medianYearly}>
+  <h3 style="margin-top:0">Son vrai coût : prix + électricité</h3>
+  <div class="tco-grid">
+    <div class="field">
+      <label for="tco-price">Prix vu en magasin</label>
+      <div class="euro"><input id="tco-price" type="text" inputmode="decimal" placeholder="ex. 549" autocomplete="off" /><span>€</span></div>
+    </div>
+    <div class="field">
+      <label for="tco-years">Sur</label>
+      <select id="tco-years"><option value="5">5 ans</option><option value="10" selected>10 ans</option><option value="15">15 ans</option></select>
+    </div>
+  </div>
+  <p class="tco-out" data-out>Entrez le prix affiché chez le marchand : nous ajoutons l'électricité qu'il consommera ({Math.round(yearly)} € par an).</p>
+  <p class="small muted" style="margin:0">Le prix reste dans votre navigateur et se retrouve dans <a href="/ma-selection/">Ma sélection</a> pour comparer le coût total de plusieurs modèles.</p>
+</div>
+<script>
+  import { readPrices, setPrice, parsePrice, eur } from "../lib/prices";
+  document.querySelectorAll<HTMLElement>("[data-tco]").forEach((box) => {
+    const id = box.dataset.id!;
+    const yearly = +box.dataset.yearly!;
+    const medianYearly = +box.dataset.medianYearly!;
+    const price = box.querySelector<HTMLInputElement>("#tco-price")!;
+    const years = box.querySelector<HTMLSelectElement>("#tco-years")!;
+    const out = box.querySelector<HTMLElement>("[data-out]")!;
+    const saved = readPrices()[id];
+    if (saved) price.value = String(saved);
+    const paint = () => {
+      const p = parsePrice(price.value);
+      const y = +years.value;
+      const elec = yearly * y;
+      if (!p) return;
+      const diff = (yearly - medianYearly) * y;
+      out.innerHTML =
+        `<span class="tco-total">${eur(p + elec)}</span> sur ${y} ans : ${eur(p)} à l'achat + ${eur(elec)} d'électricité.` +
+        (Math.abs(diff) >= 10
+          ? `<br><span class="small">Face à un modèle de consommation médiane, il vous fait ${diff < 0 ? "économiser" : "dépenser en plus"} ${eur(Math.abs(diff))} d'électricité sur la période : ${diff < 0 ? "vous pouvez donc le payer jusqu'à " + eur(Math.abs(diff)) + " plus cher et rester gagnant" : "il doit donc coûter au moins " + eur(diff) + " de moins à l'achat pour être rentable"}.</span>`
+          : "");
+    };
+    price.addEventListener("input", () => { setPrice(id, parsePrice(price.value) || null); paint(); });
+    years.addEventListener("change", paint);
+    paint();
+  });
+</script>
+<style>
+  .tco { margin-top: 16px; border-color: var(--blue-soft); }
+  .tco-grid { display: grid; grid-template-columns: 1fr 140px; gap: 12px; max-width: 460px; }
+  .euro { position: relative; }
+  .euro span { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--sub); }
+  .tco-out { margin: 14px 0 8px; }
+  .tco-out :global(.tco-total) { font-family: var(--font-head); font-weight: 800; font-size: 1.5rem; color: var(--night); }
+</style>

@@ -2,36 +2,51 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import site from "../data/site.config.json";
 ---
-<BaseLayout title="Ma sélection de réfrigérateurs" description="Comparez côte à côte les réfrigérateurs que vous avez mis de côté." indexable={false} crumbs={[{ label: "Ma sélection" }]}>
+<BaseLayout title="Ma sélection de réfrigérateurs" description="Comparez côte à côte les réfrigérateurs que vous avez mis de côté, jusqu'à leur coût total sur 10 ans." indexable={false} crumbs={[{ label: "Ma sélection" }]}>
   <div class="wrap" style="padding-top:18px">
     <h1>Ma sélection</h1>
-    <p class="muted">Les modèles mis de côté restent dans ce navigateur, sans compte ni inscription.</p>
+    <p class="muted">Les modèles mis de côté restent dans ce navigateur, sans compte ni inscription. Entrez le prix que vous voyez chez le marchand : nous calculons ce que chaque modèle vous coûtera vraiment, électricité comprise.</p>
     <div id="empty" class="card" hidden>
       <p style="margin:0">Votre sélection est vide. Ajoutez des modèles avec le bouton « ☆ Ajouter à ma sélection » sur les fiches, les classements ou le <a href="/outils/quel-frigo-rentre/">calculateur de dimensions</a>.</p>
     </div>
+    <div id="tools" hidden style="margin:14px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <label for="years">Coût total calculé sur</label>
+      <select id="years" style="width:auto"><option value="5">5 ans</option><option value="10" selected>10 ans</option><option value="15">15 ans</option></select>
+    </div>
+    <p id="verdict" class="callout" hidden></p>
     <div id="cmp" class="table-wrap" hidden></div>
+    <p class="small muted" style="margin-top:12px">Électricité : consommation de l'étiquette énergie × {site.electricity.price.toLocaleString("fr-FR", { minimumFractionDigits: 4 })} €/kWh ({site.electricity.label}).</p>
   </div>
 </BaseLayout>
-<script define:vars={{ price: site.electricity.price }}>
-  window.__price = price;
+<script define:vars={{ kwhPrice: site.electricity.price }}>
+  window.__kwhPrice = kwhPrice;
 </script>
 <script>
   import { readSelection, toggleSelection } from "../lib/selection";
+  import { readPrices, setPrice, parsePrice, eur } from "../lib/prices";
   type Row = [string, string, string, number, number, number, number, string, number, number, number, number, number, string];
   const fr = (n: number, d = 0) => n.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
-  const price = (window as any).__price as number;
+  const kwhPrice = (window as any).__kwhPrice as number;
+  const yearsSel = document.getElementById("years") as HTMLSelectElement;
   let all: Row[] = [];
-  function paint() {
+  let rows: Row[] = [];
+
+  function paintTable() {
     const ids = readSelection();
-    const rows = ids.map((id) => all.find((r) => r[0] === id)).filter(Boolean) as Row[];
+    rows = ids.map((id) => all.find((r) => r[0] === id)).filter(Boolean) as Row[];
     document.getElementById("empty")!.hidden = rows.length > 0;
+    document.getElementById("tools")!.hidden = rows.length === 0;
     const box = document.getElementById("cmp")!;
     box.hidden = rows.length === 0;
-    if (!rows.length) return;
+    if (!rows.length) { document.getElementById("verdict")!.hidden = true; return; }
+    const prices = readPrices();
     const best = (i: number, low: boolean) => { const v = rows.map((r) => r[i] as number); return low ? Math.min(...v) : Math.max(...v); };
     const line = (label: string, i: number, f: (r: Row) => string, low?: boolean) =>
-      `<tr><th>${label}</th>${rows.map((r) => `<td${low !== undefined && r[i] === best(i, low) && rows.length > 1 ? ' style="font-weight:800;color:var(--good)"' : ""}>${f(r)}</td>`).join("")}</tr>`;
+      `<tr><th>${label}</th>${rows.map((r) => `<td${low !== undefined && r[i] === best(i, low) && rows.length > 1 ? ' class="best"' : ""}>${f(r)}</td>`).join("")}</tr>`;
     box.innerHTML = `<table><thead><tr><th></th>${rows.map((r) => `<th><a href="/avis/${r[0]}/">${r[1]}</a><br><button class="btn ghost small" data-rm="${r[0]}" type="button">Retirer</button></th>`).join("")}</tr></thead><tbody>
+      <tr class="price-row"><th>Prix vu en magasin</th>${rows.map((r) => `<td><div class="euro"><input type="text" inputmode="decimal" placeholder="ex. 549" data-price-id="${r[0]}" value="${prices[r[0]] ?? ""}" aria-label="Prix du ${r[1]}"><span>€</span></div></td>`).join("")}</tr>
+      <tr><th>Électricité <span data-years-label></span></th>${rows.map((r) => `<td data-elec-id="${r[0]}"></td>`).join("")}</tr>
+      <tr class="tco-row"><th>Coût total <span data-years-label></span></th>${rows.map((r) => `<td data-tco-id="${r[0]}"></td>`).join("")}</tr>
       ${line("Note globale", 10, (r) => fr(r[10], 1) + "/10", false)}
       ${line("Largeur", 3, (r) => fr(r[3], 1) + " cm")}
       ${line("Hauteur", 4, (r) => fr(r[4], 1) + " cm")}
@@ -39,15 +54,62 @@ import site from "../data/site.config.json";
       ${line("Volume total", 6, (r) => r[6] + " L", false)}
       ${line("Classe énergie", 7, (r) => `<span class="energy energy-${r[7]}">${r[7]}</span>`)}
       ${line("Consommation", 8, (r) => r[8] + " kWh/an", true)}
-      ${line("Coût par an", 8, (r) => fr(r[8] * price) + " €", true)}
       ${line("Bruit", 9, (r) => r[9] + " dB", true)}
       ${line("No Frost", 12, (r) => (r[12] ? "Oui" : "Non"))}
     </tbody></table>`;
+    paintCosts();
   }
+
+  // Mise à jour des seules cellules de coût (pas de re-rendu : le curseur reste dans le champ).
+  function paintCosts() {
+    if (!rows.length) return;
+    const y = +yearsSel.value;
+    const prices = readPrices();
+    document.querySelectorAll<HTMLElement>("[data-years-label]").forEach((el) => (el.textContent = `(${y} ans)`));
+    const totals: { r: Row; total: number; elec: number; price: number }[] = [];
+    for (const r of rows) {
+      const elec = r[8] * kwhPrice * y;
+      const price = prices[r[0]] || 0;
+      document.querySelector<HTMLElement>(`[data-elec-id="${r[0]}"]`)!.textContent = eur(elec);
+      const cell = document.querySelector<HTMLElement>(`[data-tco-id="${r[0]}"]`)!;
+      cell.innerHTML = price ? `<b>${eur(price + elec)}</b>` : '<span class="muted small">entrez un prix</span>';
+      cell.classList.remove("best");
+      if (price) totals.push({ r, total: price + elec, elec, price });
+    }
+    const v = document.getElementById("verdict")!;
+    if (totals.length >= 2) {
+      totals.sort((a, b) => a.total - b.total);
+      const [win, ...rest] = totals;
+      document.querySelector<HTMLElement>(`[data-tco-id="${win.r[0]}"]`)!.classList.add("best");
+      const second = rest[0];
+      const cheaperUpfront = [...totals].sort((a, b) => a.price - b.price)[0];
+      let txt = `Sur ${y} ans, le <strong>${win.r[1]}</strong> est le moins cher au total : ${eur(win.total)}, soit ${eur(second.total - win.total)} de moins que le ${second.r[1]}.`;
+      if (cheaperUpfront.r[0] !== win.r[0]) txt += ` Le ${cheaperUpfront.r[1]} est moins cher à l'achat, mais sa consommation efface l'écart.`;
+      v.innerHTML = txt;
+      v.hidden = false;
+    } else {
+      v.hidden = true;
+    }
+  }
+
+  document.addEventListener("input", (e) => {
+    const el = e.target as HTMLInputElement;
+    if (!el.dataset?.priceId) return;
+    setPrice(el.dataset.priceId, parsePrice(el.value) || null);
+    paintCosts();
+  });
+  yearsSel.addEventListener("change", paintCosts);
   document.addEventListener("click", (e) => {
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-rm]");
     if (b) toggleSelection(b.dataset.rm!);
   });
-  document.addEventListener("selection:change", paint);
-  fetch("/data/niche.json").then((r) => r.json()).then((d) => { all = d; paint(); });
+  document.addEventListener("selection:change", paintTable);
+  fetch("/data/niche.json").then((r) => r.json()).then((d) => { all = d; paintTable(); });
 </script>
+<style>
+  #cmp :global(td.best) { font-weight: 800; color: var(--good); }
+  #cmp :global(.price-row td), #cmp :global(.tco-row td) { background: #f9faff; }
+  #cmp :global(.euro) { position: relative; min-width: 110px; }
+  #cmp :global(.euro input) { padding-right: 26px; }
+  #cmp :global(.euro span) { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--sub); }
+</style>

@@ -7,6 +7,7 @@ import Offers from "../../components/Offers.astro";
 import ProductCard from "../../components/ProductCard.astro";
 import Silhouettes from "../../components/Silhouettes.astro";
 import EnergyLabel from "../../components/EnergyLabel.astro";
+import TcoBox from "../../components/TcoBox.astro";
 import { indexableFiches } from "../../lib/indexation";
 import site from "../../data/site.config.json";
 import {
@@ -175,6 +176,7 @@ const ld = {
             <div class="card stat"><span class="muted small">Sur 10 ans</span><b>{euros(cost * 10)}</b><span class="small">au tarif actuel</span></div>
             <div class="card stat"><span class="muted small">Écart avec la médiane</span><b>{cost - costMedian > 0 ? "+" : ""}{euros((cost - costMedian) * 10)}</b><span class="small">sur 10 ans</span></div>
           </div>
+          <TcoBox f={f} />
           <p class="small muted">Calcul : consommation de l'étiquette énergie × {fmt(site.electricity.price, 4)} €/kWh ({site.electricity.label}). La consommation réelle dépend de la pièce, du réglage et des ouvertures de porte.</p>
           <p class="small">Ce que vaut vraiment la lettre de l'étiquette : <a href="/guides/classe-energetique-refrigerateur/">notre guide de la classe énergétique</a>. Comparer avec un autre modèle : <a href="/outils/cout-electricite-frigo/">le calculateur de coût</a>. Où se situe ce modèle face au marché : <a href="/etat-du-marche/">l'état du marché</a>.</p>
         </section>
