@@ -37,7 +37,8 @@ function paint() {
   document.querySelectorAll<HTMLButtonElement>("[data-sel-toggle]").forEach((b) => {
     const on = ids.includes(b.dataset.selToggle || "");
     b.setAttribute("aria-pressed", String(on));
-    b.textContent = on ? "★ Dans ma sélection" : "☆ Ajouter à ma sélection";
+    // data-short : libellé court pour les cartes étroites (calculateur).
+    b.textContent = "short" in b.dataset ? (on ? "★ Sélectionné" : "☆ Ma sélection") : on ? "★ Dans ma sélection" : "☆ Ajouter à ma sélection";
   });
 }
 

@@ -9,6 +9,12 @@ const faq = [
   { q: "Faut-il tenir compte de l'ouverture de la porte ?", a: "Oui. Contre un mur, une porte qui ouvre à 90° ne permet pas toujours de sortir les bacs à légumes. Laissez si possible 5 à 10 cm entre le côté charnière et le mur, ou choisissez un modèle à charnières décalées." },
   { q: "Et pour faire passer le frigo dans le logement ?", a: "Vérifiez la largeur des portes, du couloir et de l'escalier. Pour un américain (environ 90 cm de large), la profondeur hors portes et poignées est souvent la dimension qui passe : beaucoup de modèles permettent de démonter les portes." },
 ];
+// Bornes et repères des curseurs (valeurs standard du marché, cf. guide des dimensions).
+const sliders = [
+  { id: "w", label: "Largeur disponible", min: 40, max: 100, start: 60, ph: "ex. 60", ticks: [60, 70, 91] },
+  { id: "h", label: "Hauteur disponible", min: 50, max: 210, start: 190, ph: "ex. 190", ticks: [88, 122, 178, 200] },
+  { id: "d", label: "Profondeur (facultatif)", min: 45, max: 85, start: 65, ph: "ex. 70", ticks: [60, 70] },
+];
 const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map((x) => ({ "@type": "Question", name: x.q, acceptedAnswer: { "@type": "Answer", text: x.a } })) };
 ---
 <BaseLayout title="Quel frigo rentre chez moi ? Calculateur de dimensions" description={`Entrez la largeur, la hauteur et la profondeur disponibles : le calculateur affiche, parmi ${fridges.length} modèles, les réfrigérateurs qui rentrent.`} crumbs={[{ label: "Outils" }, { label: "Calculateur de dimensions" }]}>
@@ -28,14 +34,24 @@ const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: f
         <label><input type="radio" name="mode" value="encastrable" /> Encastrable (niche de cuisine)</label>
       </fieldset>
       <div class="grid fields">
-        <div class="field"><label for="w">Largeur disponible</label><input id="w" name="w" type="number" inputmode="decimal" min="30" max="200" step="0.5" placeholder="ex. 60" /></div>
-        <div class="field"><label for="h">Hauteur disponible</label><input id="h" name="h" type="number" inputmode="decimal" min="40" max="250" step="0.5" placeholder="ex. 190" /></div>
-        <div class="field"><label for="d">Profondeur (facultatif)</label><input id="d" name="d" type="number" inputmode="decimal" min="30" max="120" step="0.5" placeholder="ex. 70" /></div>
+        {sliders.map((sl) => (
+          <div class="field">
+            <label for={sl.id}>{sl.label}</label>
+            <div class="num-wrap"><input id={sl.id} name={sl.id} type="number" inputmode="decimal" min={sl.min} max={sl.max} step="0.5" placeholder={sl.ph} /><span>cm</span></div>
+            <input class="range" type="range" data-for={sl.id} min={sl.min} max={sl.max} step="0.5" value={sl.start} list={`ticks-${sl.id}`} aria-label={`${sl.label} (curseur)`} />
+            <datalist id={`ticks-${sl.id}`}>{sl.ticks.map((t) => <option value={t} />)}</datalist>
+            <div class="ticks" aria-hidden="true">{sl.ticks.map((t) => <button type="button" class="tick" data-set={sl.id} data-val={t} style={`left:${((t - sl.min) / (sl.max - sl.min)) * 100}%`}>{t}</button>)}</div>
+          </div>
+        ))}
+      </div>
+      <details class="more-crit" id="more-crit" open>
+        <summary>Plus de critères <span class="muted small" id="crit-sum"></span></summary>
+      <div class="grid fields">
         <div class="field"><label for="t">Type</label>
           <select id="t" name="t"><option value="">Tous</option>{TYPES_ORDER.map((t) => <option value={t}>{typeLabels[t]}</option>)}</select>
         </div>
-        <div class="field"><label for="v">Volume minimum</label>
-          <select id="v" name="v"><option value="0">Peu importe</option><option value="150">150 L</option><option value="250">250 L</option><option value="300">300 L</option><option value="350">350 L</option><option value="400">400 L</option><option value="500">500 L</option></select>
+        <div class="field"><label for="v">Volume minimum : <span id="v-out">peu importe</span></label>
+          <input id="v" name="v" class="range" type="range" min="0" max="600" step="25" value="0" aria-describedby="v-out" />
         </div>
         <div class="field"><label for="s">Trier par</label>
           <select id="s" name="s"><option value="score">Note globale</option><option value="kwh">Consommation</option><option value="noise">Silence</option><option value="vol">Volume</option></select>
@@ -46,11 +62,44 @@ const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: f
         <label><input type="checkbox" name="quiet" /> 35 dB maximum</label>
         <label class="libre-only"><input type="checkbox" name="tight" /> Sans marge (mesures déjà prises au plus juste)</label>
       </div>
+      </details>
       <p class="small muted hint" id="hint">Pose libre : nous gardons 2 cm de jeu en largeur et en hauteur, et 5 cm derrière l'appareil si vous indiquez une profondeur.</p>
     </form>
 
+    <section id="scene" class="card scene" hidden aria-live="polite">
+      <div class="scene-head">
+        <div>
+          <p class="eyebrow" style="margin:0">Dans votre emplacement, à l'échelle</p>
+          <h2 id="scene-title" style="margin:4px 0 6px">&nbsp;</h2>
+          <p id="scene-margins" class="scene-margins"></p>
+        </div>
+        <a id="scene-link" class="btn ghost small" href="#">Voir la fiche</a>
+      </div>
+      <div class="scene-views">
+        <figure class="view-front"><div id="scene-front"></div><figcaption class="small muted">Vue de face</figcaption></figure>
+        <figure class="view-side" id="side-wrap" hidden><div id="scene-side"></div><figcaption class="small muted">Vue de côté</figcaption></figure>
+      </div>
+      <p class="small muted" style="margin:6px 0 0">Cliquez sur « Voir chez moi » sous un modèle pour le placer dans le schéma. Vert : marge confortable ; orange : très juste ; rouge : ne rentre pas.</p>
+    </section>
+
     <section id="out" aria-live="polite">
       <h2 id="count">Entrez au moins une largeur ou une hauteur</h2>
+      <p id="tight-note" class="tight-note" hidden>
+        <span>Marge de sécurité désactivée : les appareils peuvent mesurer exactement vos cotes. Vérifiez l'espace requis dans la notice de montage avant de commander.</span>
+        <button type="button" class="btn ghost small" data-tight="0">Rétablir la marge</button>
+      </p>
+      <div id="reco" class="reco" hidden></div>
+      <div id="near" class="near" hidden>
+        <h3 id="near-title"></h3>
+        <p class="small muted" style="margin-top:0">Ils dépassent de 2 cm au plus : revérifiez vos mesures, un placard se rabote et une plinthe se retire.</p>
+        <div class="near-cta" id="near-cta" hidden>
+          <p><strong id="near-cta-count"></strong> Nous gardons 1 cm de chaque côté et au-dessus pour glisser l'appareil, et 5 cm derrière pour l'aération. Vous avez mesuré au plus juste et la notice le permet ?</p>
+          <button type="button" class="btn small" data-tight="1">Les inclure</button>
+        </div>
+        <div class="grid grid-3" id="near-list"></div>
+      </div>
+      <h3 id="all-title" class="all-title" hidden>Tous les modèles qui rentrent</h3>
+      <div id="typechips" class="chips typechips" hidden></div>
       <div class="grid grid-3" id="list"></div>
       <p id="more" hidden><button class="btn ghost" type="button" id="moreBtn">Afficher plus de modèles</button></p>
     </section>
@@ -63,7 +112,11 @@ const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: f
   </div>
 </BaseLayout>
 
+<script define:vars={{ kwhPrice: site.electricity.price }}>
+  window.__kwhPrice = kwhPrice;
+</script>
 <script>
+  import { frontView, sideView, marginsText, type SceneInput } from "../../lib/scene";
   type Row = [string, string, string, number, number, number, number, string, number, number, number, number, number, string];
   const TYPE_LABELS: Record<string, string> = {
     combine: "Combiné", "deux-portes": "2 portes", "une-porte": "1 porte", americain: "Américain",
@@ -76,7 +129,14 @@ const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: f
   const more = document.getElementById("more")!;
   const hint = document.getElementById("hint")!;
   let rows: Row[] = [];
-  let shown = 24;
+  const PAGE = matchMedia("(max-width: 600px)").matches ? 8 : 24;
+  let shown = PAGE;
+  let current = "";          // id du modèle affiché dans le schéma
+  let lastRes: Row[] = [];
+  let lastNear: Row[] = [];
+  const kwhPrice = (window as any).__kwhPrice as number;
+  const NEAR = 2;            // un quasi-compatible dépasse de 2 cm au plus
+  const eur = (n: number) => n.toLocaleString("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).replace(/\u202f/g, "\u00a0");
 
   const num = (v: FormDataEntryValue | null) => { const n = parseFloat(String(v || "").replace(",", ".")); return isFinite(n) && n > 0 ? n : 0; };
   const fr = (n: number, d = 0) => n.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -102,46 +162,169 @@ const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: f
     for (const [k, v] of Object.entries(st)) if (v && v !== "score" && !(k === "mode" && v === "libre")) params.set(k, String(v === true ? 1 : v));
     history.replaceState(null, "", params.toString() ? "?" + params : location.pathname);
 
-    if (!st.w && !st.h) { count.textContent = "Entrez au moins une largeur ou une hauteur"; list.innerHTML = ""; more.hidden = true; return; }
+    const reco = document.getElementById("reco")!;
+    const chips = document.getElementById("typechips")!;
+    const near = document.getElementById("near")!;
+    if (!st.w && !st.h) {
+      count.textContent = "Entrez au moins une largeur ou une hauteur";
+      list.innerHTML = ""; more.hidden = true; reco.hidden = true; chips.hidden = true; near.hidden = true;
+      lastRes = []; lastNear = []; paintScene(); return;
+    }
     const m = st.mode === "libre" && !st.tight ? 2 : 0;
-    const res = rows.filter((r) => {
-      const [, , type, w, h, d, vol, , , noise, , builtIn, nf] = r;
+    const vent = st.mode === "libre" && !st.tight ? 5 : 0;
+
+    // Filtres hors dimensions (type facultatif, pour compter les puces par type).
+    const passes = (r: Row, withType = true) => {
+      const [, , type, , , , vol, , , noise, , builtIn, nf] = r;
       if (st.mode === "libre" && builtIn) return false;
       if (st.mode === "encastrable" && !builtIn) return false;
-      if (st.t && type !== st.t) return false;
+      if (withType && st.t && type !== st.t) return false;
       if (st.v && vol < st.v) return false;
       if (st.nf && !nf) return false;
       if (st.quiet && noise > 35) return false;
-      if (st.mode === "libre") {
-        if (st.w && w + m > st.w) return false;
-        if (st.h && h + m > st.h) return false;
-        if (st.d && d + (st.tight ? 0 : 5) > st.d) return false;
-      } else {
-        if (st.w && w > st.w - 0.5) return false;
-        if (st.h && (h > st.h || h < st.h - 6)) return false;
-        if (st.d && d > st.d) return false;
-      }
       return true;
-    });
+    };
+    // Dépassements en cm (positifs = ça coince), et cas « trop petit pour la niche » en encastrable.
+    const over = (r: Row) => {
+      const [, , , w, h, d] = r;
+      if (st.mode === "libre") {
+        return { w: st.w ? w + m - st.w : -1, h: st.h ? h + m - st.h : -1, d: st.d ? d + vent - st.d : -1, small: false };
+      }
+      return { w: st.w ? w - (st.w - 0.5) : -1, h: st.h ? h - st.h : -1, d: st.d ? d - st.d : -1, small: !!st.h && h < st.h - 6 };
+    };
+    const fits = (r: Row) => { const o = over(r); return o.w <= 0 && o.h <= 0 && o.d <= 0 && !o.small; };
+
     const sorters: Record<string, (a: Row, b: Row) => number> = {
       score: (a, b) => b[10] - a[10], kwh: (a, b) => a[8] - b[8], noise: (a, b) => a[9] - b[9] || b[10] - a[10], vol: (a, b) => b[6] - a[6],
     };
-    res.sort(sorters[st.s] || sorters.score);
-    count.textContent = res.length ? `${res.length} réfrigérateur${res.length > 1 ? "s rentrent" : " rentre"} dans cet espace` : "Aucun modèle ne rentre : essayez sans filtre ou vérifiez vos mesures";
-    list.innerHTML = res.slice(0, shown).map((r) => {
-      const [id, name, type, w, h, d, vol, cls, kwh, noise, score, , nf, eprel] = r;
-      const spare = st.mode === "libre" && st.w ? `<span class="pill green">${fr(st.w - w, 1)} cm de marge en largeur</span>` : "";
-      return `<article class="pcard">
-        <div class="row"><span class="pill">${TYPE_LABELS[type] || type}</span><span class="score"><b>${fr(score, 1)}</b><small>/10</small></span></div>
-        <div class="pc-head"><img class="elabel-s" src="/labels/${eprel}-s.webp" width="52" height="104" alt="Étiquette énergie du ${esc(name)}" loading="lazy" onerror="this.remove()"><div>
-        <h3><a href="/avis/${id}/">${esc(name)}</a></h3>
-        <div class="dims">${fr(w, 1)} × ${fr(h, 1)} × ${fr(d, 1)} cm · ${vol} L</div></div></div>
-        <div class="meta"><span class="energy energy-${cls}">${cls}</span><span class="pill">${kwh} kWh/an</span><span class="pill">${noise} dB</span>${nf ? '<span class="pill green">No Frost</span>' : ""}${spare}</div>
-        <button class="btn ghost small sel" type="button" data-sel-toggle="${id}" aria-pressed="false">☆ Ajouter à ma sélection</button>
-      </article>`;
-    }).join("");
+    const fitAll = rows.filter((r) => passes(r, false) && fits(r));
+    const res = fitAll.filter((r) => !st.t || r[2] === st.t).sort(sorters[st.s] || sorters.score);
+    lastRes = res;
+
+    // Quasi-compatibles : passent les filtres, ne coincent que de NEAR cm au plus.
+    const nearRows = rows
+      .filter((r) => passes(r) && !fits(r))
+      .map((r) => ({ r, o: over(r) }))
+      .filter(({ o }) => !o.small && Math.max(o.w, o.h, o.d) <= NEAR)
+      .sort((a, b) => b.r[10] - a.r[10]);
+    const bestFit = res.length ? Math.max(...res.map((r) => r[10])) : 0;
+    let nearShown = (res.length ? nearRows.filter(({ r }) => r[10] > bestFit) : nearRows).slice(0, 6);
+    const closestMode = !res.length && !nearShown.length;
+    if (closestMode) {
+      nearShown = rows
+        .filter((r) => passes(r) && !fits(r))
+        .map((r) => ({ r, o: over(r) }))
+        .filter(({ o }) => !o.small)
+        .sort((a, b) => Math.max(a.o.w, a.o.h, a.o.d) - Math.max(b.o.w, b.o.h, b.o.d) || b.r[10] - a.r[10])
+        .slice(0, 3);
+    }
+    lastNear = nearShown.map((x) => x.r);
+    if (![...res, ...lastNear].some((r) => r[0] === current)) current = res[0]?.[0] || lastNear[0]?.[0] || "";
+
+    count.textContent = res.length
+      ? `${res.length} réfrigérateur${res.length > 1 ? "s rentrent" : " rentre"} dans cet espace`
+      : "Aucun modèle ne rentre avec ces critères";
+
+    // Puces par type (comptées sans le filtre de type).
+    const byType = new Map<string, number>();
+    fitAll.forEach((r) => byType.set(r[2], (byType.get(r[2]) || 0) + 1));
+    chips.hidden = byType.size < 2 && !st.t;
+    chips.innerHTML = `<button type="button" data-type="" class="${st.t ? "" : "on"}">Tous (${fitAll.length})</button>` +
+      [...byType.entries()].sort((a, b) => b[1] - a[1]).map(([t, n]) => `<button type="button" data-type="${t}" class="${st.t === t ? "on" : ""}">${TYPE_LABELS[t] || t} (${n})</button>`).join("");
+
+    // Trois recommandations distinctes parmi ce qui rentre.
+    const picks: { r: Row; tag: string; why: string }[] = [];
+    const take = (r: Row | undefined, tag: string, why: (r: Row) => string) => { if (r && !picks.some((p) => p.r[0] === r[0])) picks.push({ r, tag, why: why(r) }); };
+    if (res.length >= 3) {
+      take([...res].sort(sorters.score)[0], "Le mieux noté", (r) => `${fr(r[10], 1)}/10, la meilleure note parmi les ${res.length} qui rentrent.`);
+      const minVol = Math.round(picks[0].r[6] * 0.85);
+      take([...res].filter((r) => r[6] >= minVol).sort((a, b) => a[8] - b[8] || b[10] - a[10]).find((r) => !picks.some((p) => p.r[0] === r[0])), "Le plus économe", (r) => `${r[8]} kWh/an (${eur(r[8] * kwhPrice * 10)} sur 10 ans), le plus sobre à volume comparable (${minVol} L et plus).`);
+      take([...res].sort((a, b) => b[6] - a[6] || b[10] - a[10]).find((r) => !picks.some((p) => p.r[0] === r[0])), "Le plus spacieux", (r) => `${r[6]} litres dans le même emplacement.`);
+    }
+    reco.hidden = picks.length < 3;
+    reco.innerHTML = picks.length >= 3
+      ? `<h3>Nos 3 recommandations pour cet emplacement</h3><div class="grid grid-3">${picks.map((p) => card(p.r, st, { tag: p.tag, why: p.why })).join("")}</div>`
+      : "";
+
+    document.getElementById("all-title")!.hidden = !res.length || reco.hidden;
+    list.innerHTML = res.slice(0, shown).map((r) => card(r, st)).join("");
     more.hidden = res.length <= shown;
+
+    near.hidden = !nearShown.length;
+    near.querySelector("p")!.hidden = closestMode;
+    document.getElementById("near-title")!.textContent = closestMode
+      ? "Les modèles les plus proches de vos critères"
+      : res.length
+        ? `${nearShown.length} modèle${nearShown.length > 1 ? "s" : ""} mieux noté${nearShown.length > 1 ? "s" : ""} passerai${nearShown.length > 1 ? "ent" : "t"} à 2 cm près`
+      : `À 2 cm près, ${nearShown.length} modèle${nearShown.length > 1 ? "s" : ""} rentrerai${nearShown.length > 1 ? "ent" : "t"}`;
+    const fitsTight = (r: Row) => {
+      const [, , , w, h, d] = r;
+      return (!st.w || w <= st.w) && (!st.h || h <= st.h) && (!st.d || d <= st.d);
+    };
+    const tightGain = st.mode === "libre" && !st.tight ? rows.filter((r) => passes(r) && !fits(r) && fitsTight(r)).length : 0;
+    document.getElementById("near-cta")!.hidden = !tightGain || closestMode;
+    document.getElementById("near-cta-count")!.textContent = `${tightGain} modèle${tightGain > 1 ? "s rentrent" : " rentre"} sans notre marge de sécurité.`;
+    document.getElementById("tight-note")!.hidden = !(st.mode === "libre" && st.tight);
+    document.getElementById("near-list")!.innerHTML = nearShown.map(({ r, o }) => {
+      const parts = [o.w > 0 ? `${fr(o.w, 1)} cm en largeur` : "", o.h > 0 ? `${fr(o.h, 1)} cm en hauteur` : "", o.d > 0 ? `${fr(o.d, 1)} cm en profondeur` : ""].filter(Boolean);
+      const list2 = parts.length > 1 ? `${parts.slice(0, -1).join(", ")} et ${parts[parts.length - 1]}` : parts[0];
+      return card(r, st, { warn: `Dépasse de ${list2}` });
+    }).join("");
+
     document.dispatchEvent(new CustomEvent("selection:change"));
+    paintScene();
+  }
+
+  function card(r: Row, st: ReturnType<typeof state>, opt: { tag?: string; why?: string; warn?: string } = {}) {
+    const [id, name, type, w, h, d, vol, cls, kwh, noise, score, , nf, eprel] = r;
+    const spare = !opt.warn && st.mode === "libre" && st.w ? `<span class="pill green">${fr(st.w - w, 1)} cm de marge en largeur</span>` : "";
+    return `<article class="pcard${opt.tag ? " pick" : ""}${opt.warn ? " nearcard" : ""}">
+      ${opt.tag ? `<span class="pick-tag">${opt.tag}</span>` : ""}
+      <div class="row"><span class="pill">${TYPE_LABELS[type] || type}</span><span class="score"><b>${fr(score, 1)}</b><small>/10</small></span></div>
+      <div class="pc-head"><img class="elabel-s" src="/labels/${eprel}-s.webp" width="52" height="104" alt="Étiquette énergie du ${esc(name)}" loading="lazy" onerror="this.remove()"><div>
+      <h3><a href="/avis/${id}/">${esc(name)}</a></h3>
+      <div class="dims">${fr(w, 1)} × ${fr(h, 1)} × ${fr(d, 1)} cm · ${vol} L</div></div></div>
+      ${opt.why ? `<p class="small" style="margin:0">${opt.why}</p>` : ""}
+      ${opt.warn ? `<p class="small warn-line">${opt.warn}</p>` : ""}
+      <div class="meta"><span class="energy energy-${cls}">${cls}</span><span class="pill">${kwh} kWh/an · ${eur(kwh * kwhPrice * 10)} / 10 ans</span><span class="pill">${noise} dB</span>${nf ? '<span class="pill green">No Frost</span>' : ""}${spare}</div>
+      <div class="card-actions"><button class="btn small show" type="button" data-show="${id}">Voir chez moi</button><button class="btn ghost small sel" type="button" data-sel-toggle="${id}" data-short aria-pressed="false">☆ Ma sélection</button></div>
+    </article>`;
+  }
+
+  // Dessine un schéma en adaptant la taille du texte à la largeur réellement affichée
+  // (2e passe si le SVG est rendu plus étroit que son conteneur, ex. limite de hauteur).
+  function draw(el: HTMLElement, fn: (px: number) => string) {
+    // Recalage sur le rendu réel : on mesure la taille du texte à l'écran et on corrige
+    // la largeur « supposée » jusqu'à ~13 px (les libellés décalés peuvent élargir le dessin).
+    let px = el.clientWidth || 600;
+    for (let i = 0; i < 4; i++) {
+      el.innerHTML = fn(px);
+      const svg = el.querySelector("svg");
+      if (!svg) break;
+      const scale = svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
+      const textPx = parseFloat(svg.dataset.fs || "0") * scale;
+      if (!textPx || Math.abs(textPx - 13) < 0.8) break;
+      px = px * (textPx / 13);
+    }
+  }
+
+  function paintScene() {
+    const st = state();
+    const box = document.getElementById("scene")!;
+    const r = [...lastRes, ...lastNear].find((x) => x[0] === current);
+    box.hidden = !r;
+    if (!r) return;
+    const [id, name, type, w, h, d] = r;
+    const input: SceneInput = { mode: st.mode as SceneInput["mode"], w: st.w, h: st.h, d: st.d, tight: st.tight, fridge: { name, type, w, h, d } };
+    document.getElementById("scene-title")!.textContent = name;
+    (document.getElementById("scene-link") as HTMLAnchorElement).href = `/avis/${id}/`;
+    const m = marginsText(input);
+    document.getElementById("scene-margins")!.innerHTML = (m.ok ? '<span class="pill green">Ça rentre</span> ' : '<span class="pill red">Ne rentre pas</span> ') + m.parts.join(" · ");
+    const sideWrap = document.getElementById("side-wrap")!;
+    sideWrap.hidden = !st.d;
+    draw(document.getElementById("scene-front")!, (px) => frontView(input, px));
+    draw(document.getElementById("scene-side")!, (px) => sideView(input, px));
+    document.querySelectorAll<HTMLElement>("#out .pcard").forEach((c) => c.classList.toggle("is-shown", !!c.querySelector(`[data-show="${id}"]`)));
   }
 
   function restore() {
@@ -158,9 +341,69 @@ const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: f
     }
   }
 
+  const ranges = [...document.querySelectorAll<HTMLInputElement>("input.range[data-for]")];
+  const syncRanges = () => ranges.forEach((r) => {
+    const n = form.elements.namedItem(r.dataset.for!) as HTMLInputElement;
+    r.classList.toggle("unset", !n.value);
+    if (n.value) r.value = n.value;
+  });
+  ranges.forEach((r) => r.addEventListener("input", () => {
+    // Le curseur écrit dans le champ : c'est le champ qui fait foi pour le calcul et l'URL.
+    (form.elements.namedItem(r.dataset.for!) as HTMLInputElement).value = r.value;
+    r.classList.remove("unset");
+  }));
+  form.addEventListener("click", (e) => {
+    const t = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-set]");
+    if (!t) return;
+    (form.elements.namedItem(t.dataset.set!) as HTMLInputElement).value = t.dataset.val!;
+    syncRanges();
+    shown = PAGE; render();
+  });
+  const vOut = document.getElementById("v-out")!;
+  const paintV = () => { const v = +(form.elements.namedItem("v") as HTMLInputElement).value; vOut.textContent = v ? `${v} L` : "peu importe"; };
+
+  const crit = document.getElementById("more-crit") as HTMLDetailsElement;
+  if (matchMedia("(max-width: 600px)").matches) crit.open = false;
+  const paintCrit = () => {
+    const st = state(), bits: string[] = [];
+    if (st.t) bits.push(TYPE_LABELS[st.t] || st.t);
+    if (st.v) bits.push(`${st.v} L min`);
+    if (st.nf) bits.push("No Frost");
+    if (st.quiet) bits.push("35 dB max");
+    if (st.tight) bits.push("sans marge");
+    document.getElementById("crit-sum")!.textContent = bits.length ? `(${bits.join(", ")})` : "";
+  };
+
   restore();
-  form.addEventListener("input", () => { shown = 24; render(); });
-  document.getElementById("moreBtn")!.addEventListener("click", () => { shown += 24; render(); });
+  syncRanges(); paintV(); paintCrit();
+  form.addEventListener("input", (e) => {
+    if ((e.target as HTMLElement).matches("input[type=number]")) syncRanges();
+    paintV(); paintCrit();
+    shown = PAGE; render();
+  });
+  document.getElementById("moreBtn")!.addEventListener("click", () => { shown += PAGE; render(); });
+  let resizeT = 0;
+  window.addEventListener("resize", () => { clearTimeout(resizeT); resizeT = window.setTimeout(paintScene, 150); });
+  document.getElementById("out")!.addEventListener("click", (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-tight]");
+    if (!b) return;
+    (form.elements.namedItem("tight") as HTMLInputElement).checked = b.dataset.tight === "1";
+    shown = PAGE; render();
+    document.getElementById("count")!.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  document.getElementById("typechips")!.addEventListener("click", (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-type]");
+    if (!b) return;
+    (form.elements.namedItem("t") as HTMLSelectElement).value = b.dataset.type!;
+    shown = PAGE; render();
+  });
+  document.getElementById("out")!.addEventListener("click", (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-show]");
+    if (!b) return;
+    current = b.dataset.show!;
+    paintScene();
+    document.getElementById("scene")!.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
   fetch("/data/niche.json").then((r) => r.json()).then((d: Row[]) => { rows = d; render(); });
 </script>
 
@@ -172,8 +415,61 @@ const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: f
   .fields { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
   .opts { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 16px; }
   .hint { margin: 12px 0 0; }
+  .more-crit { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
+  .more-crit summary { cursor: pointer; font-weight: 700; color: var(--night-2); padding: 4px 0 8px; }
+  .more-crit[open] summary { margin-bottom: 4px; }
+  @media (max-width: 600px) {
+    .calc { margin-top: -22px; }
+    #calc { padding: 16px; }
+    .fields { gap: 12px; }
+    #out :global(.pcard) { padding: 14px; gap: 8px; }
+    #out :global(.pcard .dims) { font-size: 0.82rem; }
+    #out :global(.elabel-s) { width: 40px; height: auto; }
+    #out :global(.pcard .meta .pill) { font-size: 0.74rem; padding: 2px 8px; }
+    #out :global(.card-actions .btn) { padding: 8px 10px; }
+    .near { padding: 4px 12px 12px; }
+  }
+  .num-wrap { position: relative; }
+  .num-wrap input { padding-right: 38px; }
+  .num-wrap span { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--sub); font-size: 0.9rem; }
+  .range { padding: 0; border: 0; background: none; accent-color: var(--blue); height: 22px; margin-top: 4px; }
+  .range.unset { opacity: 0.45; }
+  .ticks { position: relative; height: 18px; margin: 0 9px; }
+  .tick { position: absolute; transform: translateX(-50%); background: none; border: 0; padding: 0 2px; font: inherit; font-size: 0.72rem; color: var(--sub); cursor: pointer; }
+  .tick:hover { color: var(--blue); text-decoration: underline; }
   #out { margin-top: 10px; }
-  #list :global(.pc-head) { display: flex; gap: 12px; align-items: center; }
-  #list :global(.pc-head h3) { margin-bottom: 4px; }
+  .scene { margin-top: 18px; }
+  .scene-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+  .scene-margins { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  /* Largeurs plafonnées (pas de hauteur max) : la largeur affichée reste stable, donc la taille
+     du texte calculée dans lib/scene.ts tombe juste du premier coup. */
+  .scene-views { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 18px 28px; margin-top: 12px; }
+  .scene-views figure { margin: 0; background: #fbfcff; border: 1px solid var(--line); border-radius: var(--radius-s); padding: 10px; box-sizing: border-box; }
+  .view-front { flex: 1 1 300px; max-width: 360px; }
+  .view-side { flex: 1 1 200px; max-width: 250px; }
+  .scene-views :global(svg) { width: 100%; height: auto; display: block; }
+  .view-side[hidden] { display: none; }
+  .reco :global(h3), .near h3 { margin: 18px 0 12px; }
+  .typechips { margin: 4px 0 16px; }
+  .typechips :global(button) { font: inherit; font-size: 0.9rem; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--faint); background: #fff; color: var(--ink); cursor: pointer; }
+  .typechips :global(button.on) { background: var(--night); border-color: var(--night); color: #fff; }
+  #out :global(.pcard.pick) { border: 2px solid var(--yellow); }
+  #out :global(.pick-tag) { position: absolute; top: -11px; left: 14px; background: var(--yellow); color: var(--night); font-weight: 800; font-size: 0.78rem; padding: 2px 10px; border-radius: 99px; }
+  .near { margin-top: 26px; padding: 4px 18px 18px; border: 1px dashed #e6c46a; border-radius: var(--radius); background: #fffbea; }
+  .all-title { margin: 28px 0 12px; }
+  .near-cta { display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: #fff; border: 1px solid #e6c46a; border-radius: var(--radius-s); padding: 12px 14px; margin: 0 0 16px; }
+  .near-cta p { margin: 0; flex: 1 1 420px; font-size: 0.93rem; }
+  .near-cta[hidden], .tight-note[hidden] { display: none; }
+  .tight-note span { flex: 1 1 420px; }
+  .tight-note { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: #fff6d6; border-left: 4px solid var(--yellow); padding: 10px 14px; border-radius: 0 var(--radius-s) var(--radius-s) 0; font-size: 0.92rem; margin: 0 0 14px; }
+  #out :global(.nearcard) { background: #fffdf5; }
+  #out :global(.warn-line) { margin: 0; color: #9a6200; font-weight: 600; }
+  #out :global(.pc-head) { display: flex; gap: 12px; align-items: center; }
+  #out :global(.pc-head h3) { margin-bottom: 4px; }
+  #out :global(.elabel-s) { flex-shrink: 0; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+  #out :global(.card-actions) { display: flex; gap: 8px; flex-wrap: wrap; position: relative; z-index: 2; }
+  #out :global(.card-actions .btn) { flex: 1; }
+  #out :global(.pcard.is-shown) { border: 2px solid var(--blue); }
+  @media (max-width: 600px) { .view-front { max-width: 100%; flex-basis: 100%; } .view-side { max-width: 300px; flex-basis: 100%; } }
   #list :global(.elabel-s) { flex-shrink: 0; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
 </style>
