@@ -10,6 +10,8 @@ import EnergyLabel from "../../components/EnergyLabel.astro";
 import TcoBox from "../../components/TcoBox.astro";
 import { indexableFiches } from "../../lib/indexation";
 import site from "../../data/site.config.json";
+import videos from "../../data/videos.json";
+import YouTubeLite from "../../components/YouTubeLite.astro";
 import {
   type Fridge, fridges, FACETS, typeStats, TYPE_PLURAL, rivals, duelSlug, duelSet, brandSlug,
   fmt, euros, yearlyCost, dims, scoreLabel, pct, CLIMATE, COMPARTMENT, YEAR, frDate,
@@ -79,6 +81,7 @@ const faq = [
   { q: `Est-il bruyant ?`, a: `Il déclare ${f.noise} dB(A), classe de bruit ${f.noiseClass}. ${f.noise <= 35 ? "C'est discret : on ne l'entend presque pas dans une pièce de vie." : f.noise <= 39 ? "C'est dans la moyenne : audible la nuit dans une pièce ouverte." : "C'est plutôt bruyant pour un réfrigérateur récent."}` },
   { q: `Peut-on l'installer dans un garage ?`, a: `Sa classe climatique est ${f.climate.join(", ")} : il est prévu pour une température ambiante de ${f.minTemp} à ${f.maxTemp} °C. ${f.climate.includes("T") ? "Il supporte donc un garage chaud en été." : "Dans un garage qui dépasse cette plage, il risque de mal refroidir ou de s'user plus vite."}` },
 ];
+const video = videos.find((v) => v.fiche === f.id && v.youtubeId);
 const ld = {
   "@context": "https://schema.org",
   "@graph": [
@@ -94,6 +97,7 @@ const ld = {
       ],
       ...(avis ? { review: { "@type": "Review", author: { "@type": "Organization", name: site.siteName }, reviewRating: { "@type": "Rating", ratingValue: f.scores.global, bestRating: 10, worstRating: 0 }, reviewBody: avis.data.verdict } } : {}),
     },
+    ...(video ? [{ "@type": "VideoObject", name: video.title, description: video.description, thumbnailUrl: [new URL(`/videos/${video.youtubeId}.webp`, Astro.site).href], uploadDate: video.uploadDate, duration: video.duration, embedUrl: `https://www.youtube-nocookie.com/embed/${video.youtubeId}`, publisher: { "@type": "Organization", name: site.siteName } }] : []),
     { "@type": "FAQPage", mainEntity: faq.map((x) => ({ "@type": "Question", name: x.q, acceptedAnswer: { "@type": "Answer", text: x.a } })) },
   ],
 };
@@ -139,6 +143,13 @@ const ld = {
             <h2>Notre avis sur le {f.name}</h2>
             <p class="callout"><strong>Verdict :</strong> {avis.data.verdict}</p>
             <div class="prose"><Avis /></div>
+          </section>
+        )}
+
+        {video && (
+          <section>
+            <h2>Notre avis en vidéo</h2>
+            <YouTubeLite youtubeId={video.youtubeId} title={video.title} />
           </section>
         )}
 

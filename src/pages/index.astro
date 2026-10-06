@@ -17,7 +17,7 @@ const ld = {
   "@context": "https://schema.org",
   "@graph": [
     { "@type": "WebSite", name: site.siteName, url: `https://${site.domain}/`, inLanguage: "fr-FR" },
-    { "@type": "Organization", name: site.siteName, url: `https://${site.domain}/`, logo: `https://${site.domain}/favicon.svg` },
+    { "@type": "Organization", name: site.siteName, url: `https://${site.domain}/`, logo: `https://${site.domain}/favicon.svg`, ...(site.youtube ? { sameAs: [site.youtube] } : {}) },
   ],
 };
 ---
