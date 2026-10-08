@@ -95,7 +95,8 @@ const ld = {
         { "@type": "PropertyValue", name: "Volume total", value: f.totalVolume, unitText: "L" },
         { "@type": "PropertyValue", name: "Niveau sonore", value: f.noise, unitText: "dB" },
       ],
-      ...(avis ? { review: { "@type": "Review", author: { "@type": "Organization", name: site.siteName }, reviewRating: { "@type": "Rating", ratingValue: f.scores.global, bestRating: 10, worstRating: 0 }, reviewBody: avis.data.verdict } } : {}),
+      // Toujours présent : la note /10 est affichée sur chaque fiche, et Google exige review, offers ou aggregateRating sur un Product.
+      review: { "@type": "Review", author: { "@type": "Organization", name: site.siteName, url: Astro.site?.href }, reviewRating: { "@type": "Rating", ratingValue: Math.round(f.scores.global * 10) / 10, bestRating: 10, worstRating: 0 }, ...(avis ? { reviewBody: avis.data.verdict } : {}) },
     },
     ...(video ? [{ "@type": "VideoObject", name: video.title, description: video.description, thumbnailUrl: [new URL(`/videos/${video.youtubeId}.webp`, Astro.site).href], uploadDate: video.uploadDate, duration: video.duration, embedUrl: `https://www.youtube-nocookie.com/embed/${video.youtubeId}`, publisher: { "@type": "Organization", name: site.siteName } }] : []),
     { "@type": "FAQPage", mainEntity: faq.map((x) => ({ "@type": "Question", name: x.q, acceptedAnswer: { "@type": "Answer", text: x.a } })) },
