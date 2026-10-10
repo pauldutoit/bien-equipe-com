@@ -24,15 +24,21 @@ const nav = [
   { href: "/guides/", label: "Guides" },
   { href: "/etat-du-marche/", label: "État du marché" },
 ];
+// Google exige un "item" (URL) sur chaque élément du fil d'Ariane : la dernière étape prend l'URL de la page,
+// une étape intermédiaire sans page (ex. « Outils ») reste affichée mais sort du JSON-LD (Search Console :
+// « Champ "item" manquant (dans "itemListElement") », 2026-10-10).
+const ldCrumbs = [{ label: "Accueil", href: "/" }, ...crumbs]
+  .map((c, i, all) => ({ ...c, href: c.href ?? (i === all.length - 1 ? path : undefined) }))
+  .filter((c) => c.href);
 const breadcrumbLd = crumbs.length
   ? {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
-      itemListElement: [{ label: "Accueil", href: "/" }, ...crumbs].map((c, i) => ({
+      itemListElement: ldCrumbs.map((c, i) => ({
         "@type": "ListItem",
         position: i + 1,
         name: c.label,
-        ...(c.href ? { item: new URL(c.href, Astro.site).href } : {}),
+        item: new URL(c.href!, Astro.site).href,
       })),
     }
   : null;
