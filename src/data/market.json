@@ -1,14 +1,14 @@
 {
- "updated": "2026-10-05",
+ "updated": "2026-10-11",
  "totalEprel": 56491,
- "liveFridges": 35650,
+ "liveFridges": 35649,
  "catalog": 704,
  "classShare": {
   "A": 380,
   "B": 323,
   "C": 2258,
   "D": 5105,
-  "E": 19812,
+  "E": 19811,
   "F": 7645,
   "G": 127
  },
@@ -34,7 +34,7 @@
  "noFrostShare": 44,
  "byType": {
   "combine": {
-   "count": 235,
+   "count": 234,
    "medianKwh": 212,
    "medianNoise": 36,
    "medianVolume": 343,
@@ -52,13 +52,13 @@
    "medianDepth": 59.5
   },
   "une-porte": {
-   "count": 59,
+   "count": 60,
    "medianKwh": 115,
    "medianNoise": 39,
-   "medianVolume": 252,
+   "medianVolume": 255,
    "medianWidth": 55,
-   "medianHeight": 145.7,
-   "medianDepth": 59
+   "medianHeight": 149.7,
+   "medianDepth": 59.2
   },
   "americain": {
    "count": 148,

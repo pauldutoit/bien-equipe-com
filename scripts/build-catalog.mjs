@@ -98,6 +98,30 @@ function retailFor(h) {
 
 // ---------- 3. Typage ----------
 const comps = (h) => (h.compartments || []).map((c) => c.compartmentType);
+
+// Volumes froid / congélation. EPREL reprend la déclaration du fabricant, parfois fausse :
+// on ne corrige que les cas où la liste des compartiments contredit sans ambiguïté
+// capRefrNet / capFreezeNet (les compartiments eux-mêmes sont souvent mal saisis).
+const near = (a, b) => Math.abs(a - b) <= 1;
+function volumes(h) {
+  const fridge = h.capRefrNet || 0, freezer = h.capFreezeNet || 0;
+  const cs = (h.compartments || []).filter((c) => c.volume != null && c.temperature != null);
+  const frozen = cs.filter((c) => c.temperature <= -6).reduce((s, c) => s + c.volume, 0);
+  const fresh = cs.filter((c) => c.temperature > -6).reduce((s, c) => s + c.volume, 0);
+  // Champs inversés (Frigelux R4TT140XE : 95 L « congélation », 13 L « froid » ; compartiments : 95 L à 4 °C, 13 L à -18 °C).
+  if (freezer && frozen && !near(freezer, frozen) && near(freezer, fresh) && near(fridge, frozen)) return { fridge: freezer, freezer: fridge };
+  // Congélation déclarée sans aucun compartiment froid, égale à un compartiment frais
+  // (Hisense RL5K370GSFD : 347 L « congélation », compartiments 347 L à 4 °C + 25 L à 2 °C).
+  const starred = cs.some((c) => /STAR/.test(c.compartmentType) && c.compartmentType !== "ZERO_STAR");
+  if (freezer && !frozen && !starred && cs.some((c) => c.compartmentType === "FRESH_FOOD" && near(c.volume, freezer)))
+    return { fridge: h.totalVolume, freezer: 0 };
+  return { fridge, freezer };
+}
+
+// Classe de bruit : seuils du règlement délégué (UE) 2019/2016, annexe II (A < 30 dB, B 30-35, C 36-41, D ≥ 42).
+// Quelques fiches EPREL déclarent une lettre incohérente avec leurs dB (Beko BSSA315K4SN : 35 dB « C ») : on suit les dB.
+const noiseClassOf = (h) => (h.noise < 30 ? "A" : h.noise < 36 ? "B" : h.noise < 42 ? "C" : "D");
+
 function typeOf(h, retail) {
   const c = comps(h);
   const w = h.dimensionWidth, ht = h.dimensionHeight;
@@ -109,8 +133,9 @@ function typeOf(h, retail) {
   if (w >= 830 || /americain|side-by-side|side-by/.test(text)) return "americain";
   if (/multi-?portes|multiporte|french-door|4-portes|4portes/.test(text)) return "multiportes";
   if (ht <= 900) return "table-top";
-  const freezer = c.some((x) => /STAR/.test(x) && x !== "ZERO_STAR") || (h.capFreezeNet || 0) > 0;
-  const bigFreezer = (h.capFreezeNet || 0) >= 40;
+  const freezerVol = volumes(h).freezer;
+  const freezer = c.some((x) => /STAR/.test(x) && x !== "ZERO_STAR") || freezerVol > 0;
+  const bigFreezer = freezerVol >= 40;
   if (!bigFreezer) return "une-porte";
   if (/2-portes|congel-en-haut|congelateur-en-haut|double-porte/.test(text)) return "deux-portes";
   if (/combine|congel-en-bas|congelateur-bas/.test(text)) return "combine";
@@ -197,13 +222,13 @@ for (const h of byRef.values()) {
     height: Math.round(h.dimensionHeight / 10 * 10) / 10,
     depth: Math.round(h.dimensionDepth / 10 * 10) / 10,
     totalVolume: h.totalVolume,
-    fridgeVolume: h.capRefrNet || 0,
-    freezerVolume: h.capFreezeNet || 0,
+    fridgeVolume: volumes(h).fridge,
+    freezerVolume: volumes(h).freezer,
     energyClass: h.energyClass,
     kwh: h.energyConsAnnualV2 ?? h.energyConsAnnual ?? h.consolidatedEnergyConsAnnual,
     eei: h.energyEfficiencyIndex,
     noise: h.noise,
-    noiseClass: h.noiseClass,
+    noiseClass: noiseClassOf(h),
     noFrost: noFrost(h),
     fridgeAutoDefrost: fridgeAuto(h),
     fastFreeze: !!h.fastFreeze,
