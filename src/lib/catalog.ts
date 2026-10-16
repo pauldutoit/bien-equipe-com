@@ -1,5 +1,6 @@
 import fridgesJson from "../data/fridges.json";
 import site from "../data/site.config.json";
+import amazonJson from "../data/amazon.json";
 
 export interface Offer { merchant: string; merchantName: string; url: string; ref?: string; official?: boolean }
 export interface Fridge {
@@ -20,6 +21,16 @@ export interface Fridge {
 export const fridges = fridgesJson as Fridge[];
 export const byId = new Map(fridges.map((f) => [f.id, f]));
 export const YEAR = new Date(site.dataUpdated).getFullYear();
+
+// Lien affilié Amazon : la référence principale d'abord, puis les variantes, en sautant les fiches Amazon indisponibles.
+const amazonItems = amazonJson.items as Record<string, { asin: string; available?: boolean }>;
+export function amazonFor(f: Fridge): { ref: string; asin: string; url: string } | null {
+  for (const ref of [f.ref, ...f.variants.map((v) => v.ref)]) {
+    const it = amazonItems[ref];
+    if (it && it.available !== false) return { ref, asin: it.asin, url: `https://www.amazon.fr/dp/${it.asin}?tag=${amazonJson.tag}` };
+  }
+  return null;
+}
 
 export const frDate = (s: string) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, (m || 1) - 1, d || 1).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }); };
 export const fmt = (n: number, d = 0) => n.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });

@@ -1,11 +1,14 @@
 ---
-import type { Fridge } from "../lib/catalog";
+import { amazonFor, type Fridge } from "../lib/catalog";
 const { f } = Astro.props as { f: Fridge };
 const q = encodeURIComponent(f.ref);
-// Liens directs (pas d'affiliation pour l'instant) : fiches marchands retrouvées, site officiel, puis recherches.
+// Amazon en lien affilié quand l'ASIN de la référence (ou d'une variante) est connu, sinon liens directs :
+// fiches marchands retrouvées, site officiel, puis recherches.
+const amazon = amazonFor(f);
 const shops = f.offers.filter((o) => !o.official);
 const official = f.offers.filter((o) => o.official).slice(0, 1);
 const found = new Set(shops.map((o) => o.merchant));
+if (amazon) found.add("amazon");
 const searches = [
   { key: "darty", name: "Darty", url: `https://www.darty.com/nav/recherche?text=${q}` },
   { key: "boulanger", name: "Boulanger", url: `https://www.boulanger.com/resultats?tr=${q}` },
@@ -13,6 +16,12 @@ const searches = [
 ].filter((s) => !found.has(s.key));
 ---
 <div class="offers">
+  {amazon && (
+    <a class="offer" href={amazon.url} rel="sponsored nofollow noopener" target="_blank">
+      <span><b>Amazon</b><br /><span class="small muted">Fiche produit{amazon.ref !== f.ref ? ` (${amazon.ref})` : ""} · lien affilié</span></span>
+      <span class="btn small">Voir le prix</span>
+    </a>
+  )}
   {shops.map((o) => (
     <a class="offer" href={o.url} rel="nofollow noopener" target="_blank">
       <span><b>{o.merchantName}</b><br /><span class="small muted">Fiche produit{o.ref ? ` (${o.ref})` : ""}</span></span>
@@ -31,7 +40,9 @@ const searches = [
       <span class="btn ghost small">Chercher</span>
     </a>
   ))}
-  <p class="small muted" style="margin:6px 0 0">Liens directs vers les marchands, sans commission. Les prix changent souvent : vérifiez la référence exacte ({f.ref}) avant d'acheter.</p>
+  <p class="small muted" style="margin:6px 0 0">{amazon
+    ? "Le lien Amazon est un lien affilié : nous touchons une petite commission si vous achetez, sans surcoût pour vous et sans effet sur la note. Les autres liens sont directs."
+    : "Liens directs vers les marchands, sans commission."} Les prix changent souvent : vérifiez la référence exacte ({f.ref}) avant d'acheter.</p>
 </div>
 <style>
   .offers { display: flex; flex-direction: column; gap: 8px; }
