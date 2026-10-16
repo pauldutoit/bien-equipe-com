@@ -18,8 +18,8 @@ const searches = [
 <div class="offers">
   {amazon && (
     <a class="offer" href={amazon.url} rel="sponsored nofollow noopener" target="_blank">
-      <span><b>Amazon</b><br /><span class="small muted">Fiche produit{amazon.ref !== f.ref ? ` (${amazon.ref})` : ""} · lien affilié</span></span>
-      <span class="btn small">Voir le prix</span>
+      <span><b>Amazon</b><br /><span class="small muted">Fiche produit{amazon.ref !== f.ref ? ` (${amazon.ref})` : ""}</span></span>
+      <span class="btn small">Voir sur Amazon</span>
     </a>
   )}
   {shops.map((o) => (
