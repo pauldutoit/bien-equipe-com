@@ -69,6 +69,7 @@ export async function onRequestPost({ request, env: rawEnv }) {
     if (!check.success) return json({ ok: false, error: 'captcha' }, 400);
   }
 
+  const site = new URL(request.url).hostname.replace(/^www\./, '');
   const submittedAt = new Date().toISOString();
   const cfCountry = request.headers.get('cf-ipcountry') || '';
   const userAgent = request.headers.get('user-agent') || '';
@@ -88,6 +89,7 @@ export async function onRequestPost({ request, env: rawEnv }) {
 
   const html = `
     <h2>New contact form message</h2>
+    <p><strong>Site:</strong> ${escapeHtml(site)}</p>
     <p><strong>From:</strong> ${escapeHtml(name)} &lt;${escapeHtml(email)}&gt;</p>
     ${subject ? `<p><strong>Subject:</strong> ${escapeHtml(subject)}</p>` : ''}
     <p><strong>Message:</strong></p>
@@ -113,7 +115,7 @@ export async function onRequestPost({ request, env: rawEnv }) {
       reply_to: email,
       subject: subjectLine,
       html,
-      text: `From: ${name} <${email}>\n${subject ? `Subject: ${subject}\n` : ''}\n${message}\n\n---\nSubmitted ${submittedAt}\nCountry ${cfCountry}\nUA: ${userAgent}`,
+      text: `Site: ${site}\nFrom: ${name} <${email}>\n${subject ? `Subject: ${subject}\n` : ''}\n${message}\n\n---\nSubmitted ${submittedAt}\nCountry ${cfCountry}\nUA: ${userAgent}`,
     }),
   });
 
