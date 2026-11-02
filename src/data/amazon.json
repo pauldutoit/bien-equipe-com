@@ -3,6 +3,8 @@
   "checked": "2026-10-16",
   "note": "ASIN Amazon.fr dont le titre ou l'URL porte la référence exacte (suffixe pays type EF/FR toléré). available:false = fiche Amazon vue « actuellement indisponible » : non affichée.",
   "items": {
+    "RB440N4ACC": { "asin": "B0DBHGHBX9" },
+    "HDPW5618DNPW": { "asin": "B0DHZQ2NN6" },
     "RB34C600CSA": { "asin": "B0CB4P9JQY" },
     "RB34C605CS9": { "asin": "B0FR7111Q2", "available": false },
     "GBBS322CPY": { "asin": "B0FY7MKDRG" },
