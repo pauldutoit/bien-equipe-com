@@ -4,6 +4,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import Energy from "../../components/Energy.astro";
 import ScoreBars from "../../components/ScoreBars.astro";
 import Offers from "../../components/Offers.astro";
+import AmazonButton from "../../components/AmazonButton.astro";
 import ProductCard from "../../components/ProductCard.astro";
 import Silhouettes from "../../components/Silhouettes.astro";
 import EnergyLabel from "../../components/EnergyLabel.astro";
@@ -133,7 +134,8 @@ const ld = {
         <div class="big-score"><b>{fmt(f.scores.global, 1)}</b><span>/10</span></div>
         <p class="muted" style="margin:0 0 14px">{scoreLabel(f.scores.global)} · médiane des {plural} : {fmt(st.global, 1)}</p>
         <ScoreBars f={f} compact />
-        <button class="btn ghost small" style="margin-top:16px;width:100%" type="button" data-sel-toggle={f.id} aria-pressed="false">☆ Ajouter à ma sélection</button>
+        <AmazonButton f={f} variant="block" />
+        <button class="btn ghost small" style="margin-top:10px;width:100%" type="button" data-sel-toggle={f.id} aria-pressed="false">☆ Ajouter à ma sélection</button>
       </aside>
     </header>
 

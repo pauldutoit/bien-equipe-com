@@ -2,8 +2,9 @@
 import Energy from "./Energy.astro";
 import EnergyLabel from "./EnergyLabel.astro";
 import { type Fridge, dims, fmt, euros, yearlyCost } from "../lib/catalog";
-interface Props { f: Fridge; rank?: number; note?: string }
-const { f, rank, note } = Astro.props;
+import AmazonButton from "./AmazonButton.astro";
+interface Props { f: Fridge; rank?: number; note?: string; buy?: boolean }
+const { f, rank, note, buy = false } = Astro.props;
 ---
 <article class="pcard">
   {rank && <span class="rank">{rank}</span>}
@@ -25,6 +26,7 @@ const { f, rank, note } = Astro.props;
     {f.noFrost && <span class="pill green">No Frost</span>}
   </div>
   {note && <p class="small muted" style="margin:0">{note}</p>}
+  {buy && <AmazonButton f={f} variant="card" />}
   <button class="btn ghost small sel" type="button" data-sel-toggle={f.id} aria-pressed="false">☆ Ajouter à ma sélection</button>
 </article>
 <style>

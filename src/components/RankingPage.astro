@@ -3,10 +3,11 @@
 import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import ProductCard from "./ProductCard.astro";
+import AmazonButton from "./AmazonButton.astro";
 import Energy from "./Energy.astro";
 import Silhouettes from "./Silhouettes.astro";
 import site from "../data/site.config.json";
-import { type Fridge, FACETS, fmt, euros, yearlyCost, median, dims, MIN_INDEX, YEAR } from "../lib/catalog";
+import { type Fridge, FACETS, amazonFor, fmt, euros, yearlyCost, median, dims, MIN_INDEX, YEAR } from "../lib/catalog";
 
 interface Props {
   title: string; description: string; h1: string; intro: string;
@@ -53,6 +54,13 @@ const itemListLd = {
       <p class="lead" style="max-width:780px;color:var(--sub);font-size:1.08rem">{intro}</p>
     </header>
 
+    {top3.length >= 3 && (
+      <section>
+        <h2>Notre sélection : les 3 meilleurs, et pour qui ils sont faits</h2>
+        <div class="grid grid-3">{top3.map((f, i) => <ProductCard f={f} rank={i + 1} note={why(f, i)} buy />)}</div>
+      </section>
+    )}
+
     <section class="grid grid-4 kpis">
       <div class="card"><span class="muted small">Modèles analysés</span><b>{stats.count}</b><span class="small">{stats.brands} marques</span></div>
       <div class="card"><span class="muted small">Consommation médiane</span><b>{stats.kwh} kWh</b><span class="small">{euros(stats.kwh * site.electricity.price)} par an</span></div>
@@ -62,9 +70,7 @@ const itemListLd = {
 
     {top3.length >= 3 && (
       <section>
-        <h2>Les 3 meilleurs, et pour qui ils sont faits</h2>
-        <div class="grid grid-3">{top3.map((f, i) => <ProductCard f={f} rank={i + 1} note={why(f, i)} />)}</div>
-        <h3 style="margin-top:26px">À la même échelle</h3>
+        <h2>Les 3 meilleurs à la même échelle</h2>
         <Silhouettes items={top3} />
       </section>
     )}
@@ -90,7 +96,7 @@ const itemListLd = {
       <p class="muted small">Classés par note globale Bien Équipé ({listed.length < items.length ? `30 premiers sur ${items.length}` : `${items.length} modèles`}). <a href="/methodologie/">Comment nous notons</a>.</p>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>#</th><th>Modèle</th><th>Dimensions</th><th class="num">Volume</th><th>Classe</th><th class="num">kWh/an</th><th class="num">dB</th><th class="num">Note</th></tr></thead>
+          <thead><tr><th>#</th><th>Modèle</th><th>Dimensions</th><th class="num">Volume</th><th>Classe</th><th class="num">kWh/an</th><th class="num">dB</th><th class="num">Note</th><th>Acheter</th></tr></thead>
           <tbody>
             {listed.map((f, i) => (
               <tr>
@@ -102,6 +108,7 @@ const itemListLd = {
                 <td class="num">{f.kwh}</td>
                 <td class="num">{f.noise}</td>
                 <td class="num"><b>{fmt(f.scores.global, 1)}</b></td>
+                <td class="small">{amazonFor(f) ? <AmazonButton f={f} variant="link" /> : <a href={`/avis/${f.id}/`}>Voir l'avis</a>}</td>
               </tr>
             ))}
           </tbody>

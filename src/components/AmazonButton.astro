@@ -1,0 +1,26 @@
+---
+// Bouton d'achat Amazon (lien affilié) : fiche produit si l'ASIN est connu, sinon recherche Amazon taguée.
+// variant "block" = bouton pleine largeur, "card" = bouton de carte, "link" = lien texte pour les tableaux.
+import { amazonFor, type Fridge } from "../lib/catalog";
+import amazonJson from "../data/amazon.json";
+interface Props { f: Fridge; variant?: "block" | "card" | "link" }
+const { f, variant = "card" } = Astro.props;
+const a = amazonFor(f);
+const href = a ? a.url : `https://www.amazon.fr/s?k=${encodeURIComponent(f.brand + " " + f.ref)}&tag=${amazonJson.tag}`;
+const label = a ? "Voir le prix sur Amazon" : "Chercher sur Amazon";
+---
+{variant === "link" ? (
+  <a href={href} rel="sponsored nofollow noopener" target="_blank" title={`${f.name} sur Amazon (lien affilié)`}>Amazon</a>
+) : (
+  <div class={`amz amz-${variant}`}>
+    <a class="btn small" href={href} rel="sponsored nofollow noopener" target="_blank">{label}</a>
+    <span class="small muted">Lien affilié, sans surcoût pour vous</span>
+  </div>
+)}
+<style>
+  .amz { display: flex; flex-direction: column; gap: 4px; }
+  .amz .btn { text-align: center; }
+  .amz-block { margin-top: 16px; }
+  .amz-block .btn { width: 100%; }
+  .amz-card { margin-top: 4px; }
+</style>
