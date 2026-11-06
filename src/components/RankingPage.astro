@@ -20,7 +20,9 @@ const guides = (await getCollection("guides")).filter((g) => !g.data.draft);
 const indexable = items.length >= MIN_INDEX;
 const top3 = items.slice(0, 3);
 // Les mieux notés de la page dont on a la fiche Amazon (hors top 3) : même ordre que le classement.
-const amazonPicks = items.filter((f) => !top3.includes(f) && amazonFor(f)).slice(0, 3);
+// Only well-ranked models (top 30 of this ranking, score 6/10 or more), so the block never
+// pushes a weak model just because it is on Amazon.
+const amazonPicks = items.filter((f, i) => i < 30 && f.scores.global >= 6 && !top3.includes(f) && amazonFor(f)).slice(0, 3);
 const primeUrl = `https://www.amazon.fr/amazonprime?primeCampaignId=prime_assoc_ft&tag=${amazonJson.tag}`;
 const listed = listAll ? items : items.slice(0, 30);
 const stats = {
