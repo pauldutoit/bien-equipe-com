@@ -4,6 +4,7 @@ import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import ProductCard from "./ProductCard.astro";
 import AmazonButton from "./AmazonButton.astro";
+import amazonJson from "../data/amazon.json";
 import Energy from "./Energy.astro";
 import Silhouettes from "./Silhouettes.astro";
 import site from "../data/site.config.json";
@@ -18,6 +19,9 @@ const { title, description, h1, intro, items, crumbs, current, showFacets = true
 const guides = (await getCollection("guides")).filter((g) => !g.data.draft);
 const indexable = items.length >= MIN_INDEX;
 const top3 = items.slice(0, 3);
+// Les mieux notés de la page dont on a la fiche Amazon (hors top 3) : même ordre que le classement.
+const amazonPicks = items.filter((f) => !top3.includes(f) && amazonFor(f)).slice(0, 3);
+const primeUrl = `https://www.amazon.fr/amazonprime?primeCampaignId=prime_assoc_ft&tag=${amazonJson.tag}`;
 const listed = listAll ? items : items.slice(0, 30);
 const stats = {
   count: items.length,
@@ -59,6 +63,17 @@ const itemListLd = {
         <h2>Notre sélection : les 3 meilleurs, et pour qui ils sont faits</h2>
         <div class="grid grid-3">{top3.map((f, i) => <ProductCard f={f} rank={i + 1} note={why(f, i)} buy />)}</div>
       </section>
+    )}
+
+    {amazonPicks.length > 0 && (
+      <section>
+        <h2>Les mieux notés disponibles sur Amazon</h2>
+        <p class="muted small">Dans le même classement, les modèles dont nous avons retrouvé la fiche Amazon avec la référence exacte. L'ordre suit notre note, pas la commission.</p>
+        <div class="grid grid-3">{amazonPicks.map((f) => <ProductCard f={f} note={`Classé ${items.indexOf(f) + 1}e sur ${items.length} dans cette sélection.`} buy />)}</div>
+      </section>
+    )}
+    {(top3.length >= 3 || amazonPicks.length > 0) && (
+      <p class="small muted">Pas encore client Prime ? <a href={primeUrl} rel="sponsored nofollow noopener" target="_blank">Essai gratuit d'Amazon Prime</a> pour la livraison rapide (lien affilié).</p>
     )}
 
     <section class="grid grid-4 kpis">

@@ -14,7 +14,7 @@ const label = a ? "Voir le prix sur Amazon" : "Chercher sur Amazon";
 ) : (
   <div class={`amz amz-${variant}`}>
     <a class="btn small" href={href} rel="sponsored nofollow noopener" target="_blank">{label}</a>
-    <span class="small muted">Lien affilié, sans surcoût pour vous</span>
+    <span class="small muted">Lien affilié, sans surcoût pour vous{variant === "block" && <>. Pas encore Prime ? <a href={`https://www.amazon.fr/amazonprime?primeCampaignId=prime_assoc_ft&tag=${amazonJson.tag}`} rel="sponsored nofollow noopener" target="_blank">Essai gratuit</a></>}</span>
   </div>
 )}
 <style>
